@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liquid Glass Apps v4</title>
+<style>
+.lg-pill, .lg-pill *, .lg-track, .lg-track *, .slider, .slider *, .tabs, .tabs * {
+  margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+}
+
+/* ---------- PILL ---------- */
+.lg-pill {
+  position:relative; isolation:isolate;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  height:52px; padding:0 22px; border:none; border-radius:999px; cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  font-size:16px; font-weight:600; letter-spacing:-0.01em;
+  color:#fff; text-shadow:0 1px 1px rgba(0,0,0,0.35);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(20px) saturate(200%) brightness(1.12);
+  -webkit-backdrop-filter:blur(20px) saturate(200%) brightness(1.12);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.22) inset,
+    0 0 0 0.5px rgba(0,0,0,0.1),
+    0 1px 1px 0 rgba(255,255,255,0.5) inset,
+    0 -1px 1px 0 rgba(0,0,0,0.08) inset,
+    0 12px 40px rgba(0,0,0,0.4),
+    0 3px 10px rgba(0,0,0,0.25);
+  overflow:hidden; transform:translateZ(0); transform-origin:center center;
+  transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  user-select:none; -webkit-user-select:none; will-change:transform;
+}
+.lg-pill:disabled { opacity:0.5; pointer-events:none; }
+.lg-pill::before {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 12%,
+    rgba(255,255,255,0) 38%, rgba(255,255,255,0) 62%,
+    rgba(255,255,255,0.06) 95%, rgba(255,255,255,0.14) 100%);
+  z-index:2; mix-blend-mode:screen;
+}
+.lg-pill::after {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,
+    rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 70%);
+  z-index:3;
+}
+.lg-pill .lens {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:4; opacity:0;
+  transition:opacity 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  background:
+    radial-gradient(ellipse 60% 70% at calc(var(--lx,50%) - 6%) calc(var(--ly,50%) - 3%),
+      rgba(255,80,100,0.55) 0%, transparent 45%),
+    radial-gradient(ellipse 60% 70% at calc(var(--lx,50%) + 6%) calc(var(--ly,50%) + 3%),
+      rgba(80,160,255,0.55) 0%, transparent 45%),
+    radial-gradient(ellipse 65% 75% at var(--lx,50%) var(--ly,50%),
+      rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+  mix-blend-mode:overlay; filter:blur(3px);
+}
+.lg-pill.is-active .lens { opacity:1; }
+.lg-pill .inner-shadow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:5;
+  box-shadow:
+    0 0 14px 3px rgba(0,0,0,0.45) inset,
+    0 0 3px 1px rgba(0,0,0,0.3) inset,
+    0 1px 0 0 rgba(255,255,255,0.2) inset;
+  opacity:0; transition:opacity 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.lg-pill.is-active .inner-shadow { opacity:1; }
+.lg-pill .ripple-layer {
+  position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+  pointer-events:none; z-index:6;
+}
+.lg-pill .ripple {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.85) 0%,
+    rgba(255,255,255,0.35) 40%, transparent 70%);
+  transform:translate(-50%,-50%) scale(0);
+  animation:lgRippleGrow 0.7s cubic-bezier(0.22,1,0.36,1) forwards;
+  pointer-events:none;
+}
+@keyframes lgRippleGrow {
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(30);opacity:0;}
+}
+.lg-pill .content {
+  position:relative; z-index:10;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  pointer-events:none;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.lg-pill .icon { width:20px; height:20px; flex-shrink:0;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+.lg-pill .label { font-size:16px; font-weight:600; line-height:1; white-space:nowrap; }
+.lg-pill:focus-visible { outline:2px solid rgba(255,255,255,0.7); outline-offset:4px; }
+
+/* ---------- TOGGLE ---------- */
+.lg-track {
+  position:relative; width:80px; height:34px; border-radius:17px;
+  background:rgba(120,120,128,0.35);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.18) inset,
+    0 1px 1px 0 rgba(255,255,255,0.35) inset,
+    0 6px 20px rgba(0,0,0,0.35);
+  overflow:visible; cursor:pointer; transition:background .2s ease;
+}
+.lg-track.on { background:rgba(52,199,89,0.85); }
+.lg-track .knob {
+  position:absolute; top:3px; left:3px; width:49px; height:27px;
+  border-radius:13.5px; isolation:isolate; z-index:2; cursor:grab;
+  transform-origin:center center;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  outline:1px solid transparent;
+  background:rgba(255,255,255,0.09);
+  backdrop-filter:blur(7px) saturate(220%) brightness(1.18) contrast(1.05);
+  -webkit-backdrop-filter:blur(7px) saturate(220%) brightness(1.18) contrast(1.05);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.32) inset,
+    0 2px 1px -0.5px rgba(255,255,255,0.90) inset,
+    0 -2px 2px 0 rgba(0,0,0,0.32) inset,
+    0 1px 0 0 rgba(255,255,255,0.45),
+    0 -1px 0 0 rgba(0,0,0,0.22),
+    0 18px 32px rgba(0,0,0,0.62),
+    0 8px 16px rgba(0,0,0,0.42),
+    0 2px 4px rgba(0,0,0,0.28);
+  overflow:hidden; transform:translateZ(0); touch-action:none;
+  transition:backdrop-filter 0.22s cubic-bezier(0.34,1.56,0.64,1),
+             -webkit-backdrop-filter 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+.lg-track .knob:active { cursor:grabbing; }
+.lg-track .knob.is-active {
+  will-change:transform; background:rgba(255,255,255,0.02);
+  backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  -webkit-backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.38) inset,
+    0 2px 1px -0.5px rgba(255,255,255,1.0) inset,
+    0 -2px 2px 0 rgba(0,0,0,0.40) inset,
+    0 1px 0 0 rgba(255,255,255,0.55),
+    0 -1px 0 0 rgba(0,0,0,0.28),
+    0 22px 40px rgba(0,0,0,0.72),
+    0 10px 20px rgba(0,0,0,0.50),
+    0 3px 6px rgba(0,0,0,0.32);
+}
+.lg-track .knob .gloss, .lg-track .knob .top-glow,
+.lg-track .knob .lens, .lg-track .knob .inner-shadow, .lg-track .knob .ripple-layer {
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.lg-track .knob .gloss {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.24) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.05) 78%, rgba(255,255,255,0.08) 95%, rgba(255,255,255,0.18) 100%);
+  z-index:2; mix-blend-mode:screen;
+}
+.lg-track .knob.is-active .gloss {
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.80) 0%, rgba(255,255,255,0.32) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.06) 78%, rgba(255,255,255,0.14) 95%, rgba(255,255,255,0.24) 100%);
+}
+.lg-track .knob .top-glow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 72%);
+  z-index:3;
+}
+.lg-track .knob.is-active .top-glow {
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 72%);
+}
+.lg-track .knob .lens {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:4; opacity:0;
+  transition:opacity 0.32s cubic-bezier(0.34,1.56,0.64,1), filter 0.22s ease;
+  background:radial-gradient(ellipse 60% 72% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.18) 38%, transparent 72%);
+  mix-blend-mode:overlay; filter:blur(1.5px) contrast(1.15);
+}
+.lg-track .knob.is-active .lens {
+  opacity:1;
+  background:radial-gradient(ellipse 66% 78% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 28%,
+    rgba(255,255,255,0.08) 56%, transparent 82%);
+  mix-blend-mode:overlay; filter:blur(0.2px) contrast(2.4) saturate(2.8);
+}
+.lg-track .knob .inner-shadow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:5; opacity:0;
+  transition:opacity 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+  box-shadow:
+    0 0 16px 3px rgba(0,0,0,0.55) inset,
+    0 0 4px 1px rgba(0,0,0,0.4) inset,
+    0 2px 1px -1px rgba(255,255,255,0.25) inset,
+    0 -2px 1px -1px rgba(255,255,255,0.15) inset;
+}
+.lg-track .knob.is-active .inner-shadow {
+  opacity:1;
+  box-shadow:
+    0 0 34px 9px rgba(0,0,0,0.78) inset,
+    0 0 10px 3px rgba(0,0,0,0.55) inset,
+    0 2px 1px -1px rgba(255,255,255,0.38) inset,
+    0 -2px 1px -1px rgba(255,255,255,0.25) inset;
+}
+.lg-track .knob .ripple-layer {
+  position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+  pointer-events:none; z-index:6;
+}
+.lg-track .knob .ripple {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.85) 0%,
+    rgba(255,255,255,0.35) 40%, transparent 70%);
+  transform:translate(-50%,-50%) scale(0);
+  animation:lgRippleGrowToggle 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  pointer-events:none;
+}
+@keyframes lgRippleGrowToggle {
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(16);opacity:0;}
+}
+
+/* ---------- SLIDER ---------- */
+.slider-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
+.slider {
+  position:relative; width:100%; height:40px;
+  display:flex; align-items:center; cursor:pointer;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.slider .track {
+  position:absolute; left:0; right:0; top:50%; transform:translateY(-50%);
+  height:8px; border-radius:999px; background:rgba(120,120,128,0.32);
+  backdrop-filter:blur(6px) saturate(160%);
+  -webkit-backdrop-filter:blur(6px) saturate(160%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.16) inset,
+    0 1px 1px 0 rgba(255,255,255,0.4) inset,
+    0 -1px 1px 0 rgba(0,0,0,0.15) inset,
+    0 6px 18px rgba(0,0,0,0.4);
+  overflow:hidden;
+}
+.slider .fill {
+  position:absolute; top:0; left:0; bottom:0; width:0%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#00ffff 0%,#00eaff 20%,#4df7ff 50%,#b3ffff 80%,#ffffff 100%);
+  box-shadow:
+    0 0 6px rgba(0,255,255,1), 0 0 14px rgba(0,240,255,1),
+    0 0 28px rgba(0,230,255,1), 0 0 50px rgba(0,210,255,1),
+    0 0 90px rgba(0,190,255,0.9), 0 0 140px rgba(0,170,255,0.7),
+    0 1px 0 0 rgba(255,255,255,1) inset,
+    0 -1px 0 0 rgba(0,150,220,0.7) inset;
+  pointer-events:none;
+}
+.slider .knob-ambient {
+  position:absolute; top:50%; left:0; width:49px; height:27px;
+  border-radius:13.5px; pointer-events:none; z-index:1;
+  transform-origin:center center;
+  box-shadow:
+    0 18px 28px rgba(0,0,0,0.55),
+    0 8px 14px rgba(0,0,0,0.40),
+    0 2px 4px rgba(0,0,0,0.28);
+  opacity:1;
+}
+.slider .knob {
+  position:absolute; top:50%; left:0; width:49px; height:27px;
+  border-radius:13.5px; isolation:isolate; z-index:2; cursor:grab;
+  transform-origin:center center;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  outline:1px solid transparent;
+  background:rgba(255,255,255,0.09);
+  backdrop-filter:blur(7px) saturate(220%) brightness(1.18) contrast(1.05);
+  -webkit-backdrop-filter:blur(7px) saturate(220%) brightness(1.18) contrast(1.05);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.32) inset,
+    0 2px 1px -0.5px rgba(255,255,255,0.90) inset,
+    0 -2px 2px 0 rgba(0,0,0,0.32) inset,
+    0 1px 0 0 rgba(255,255,255,0.45),
+    0 -1px 0 0 rgba(0,0,0,0.22),
+    0 18px 32px rgba(0,0,0,0.62),
+    0 8px 16px rgba(0,0,0,0.42),
+    0 2px 4px rgba(0,0,0,0.28);
+  overflow:hidden; transform:translateZ(0); touch-action:none;
+  transition:backdrop-filter 0.22s cubic-bezier(0.34,1.56,0.64,1),
+             -webkit-backdrop-filter 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+.slider .knob:active { cursor:grabbing; }
+.slider .knob.is-active {
+  will-change:transform; background:rgba(255,255,255,0.02);
+  backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  -webkit-backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.38) inset,
+    0 2px 1px -0.5px rgba(255,255,255,1.0) inset,
+    0 -2px 2px 0 rgba(0,0,0,0.40) inset,
+    0 1px 0 0 rgba(255,255,255,0.55),
+    0 -1px 0 0 rgba(0,0,0,0.28),
+    0 22px 40px rgba(0,0,0,0.72),
+    0 10px 20px rgba(0,0,0,0.50),
+    0 3px 6px rgba(0,0,0,0.32);
+}
+.slider .knob .gloss, .slider .knob .top-glow, .slider .knob .lens,
+.slider .knob .inner-shadow, .slider .knob .ripple-layer {
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.slider .knob .gloss {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.24) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.05) 78%, rgba(255,255,255,0.08) 95%, rgba(255,255,255,0.18) 100%);
+  z-index:2; mix-blend-mode:screen;
+}
+.slider .knob.is-active .gloss {
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.80) 0%, rgba(255,255,255,0.32) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.06) 78%, rgba(255,255,255,0.14) 95%, rgba(255,255,255,0.24) 100%);
+}
+.slider .knob .top-glow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 72%);
+  z-index:3;
+}
+.slider .knob.is-active .top-glow {
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 72%);
+}
+.slider .knob .lens {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:4; opacity:0;
+  transition:opacity 0.32s cubic-bezier(0.34,1.56,0.64,1), filter 0.22s ease;
+  background:radial-gradient(ellipse 60% 72% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.18) 38%, transparent 72%);
+  mix-blend-mode:overlay; filter:blur(1.5px) contrast(1.15);
+}
+.slider .knob.is-active .lens {
+  opacity:1;
+  background:radial-gradient(ellipse 66% 78% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 28%,
+    rgba(255,255,255,0.08) 56%, transparent 82%);
+  mix-blend-mode:overlay; filter:blur(0.2px) contrast(2.4) saturate(2.8);
+}
+.slider .knob .inner-shadow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:5; opacity:0;
+  transition:opacity 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+  box-shadow:
+    0 0 16px 3px rgba(0,0,0,0.55) inset,
+    0 0 4px 1px rgba(0,0,0,0.4) inset,
+    0 2px 1px -1px rgba(255,255,255,0.25) inset,
+    0 -2px 1px -1px rgba(255,255,255,0.15) inset;
+}
+.slider .knob.is-active .inner-shadow {
+  opacity:1;
+  box-shadow:
+    0 0 34px 9px rgba(0,0,0,0.78) inset,
+    0 0 10px 3px rgba(0,0,0,0.55) inset,
+    0 2px 1px -1px rgba(255,255,255,0.38) inset,
+    0 -2px 1px -1px rgba(255,255,255,0.25) inset;
+}
+.slider .knob .ripple-layer {
+  position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+  pointer-events:none; z-index:6;
+}
+.slider .knob .ripple {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.85) 0%,
+    rgba(255,255,255,0.35) 40%, transparent 70%);
+  transform:translate(-50%,-50%) scale(0);
+  animation:sliderRippleGrow 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  pointer-events:none;
+}
+@keyframes sliderRippleGrow {
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(16);opacity:0;}
+}
+.slider-wrap .value-readout {
+  font-variant-numeric:tabular-nums; font-size:13px; letter-spacing:0.06em;
+  color:rgba(255,255,255,0.9); padding:6px 14px; border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px) saturate(180%);
+  -webkit-backdrop-filter:blur(12px) saturate(180%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.14) inset,
+    0 4px 14px rgba(0,0,0,0.3);
+  user-select:none; -webkit-user-select:none;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
+}
+.slider-wrap .value-readout b { font-weight:600; color:#fff; }
+
+/* ---------- TABS ---------- */
+.tabs {
+  position:relative;
+  height:60px;
+  border-radius:999px; background:rgba(255,255,255,0.10);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.16) inset,
+    0 1px 0 0 rgba(255,255,255,0.35) inset,
+    0 -1px 0 0 rgba(0,0,0,0.15) inset,
+    0 10px 30px rgba(0,0,0,0.35),
+    0 2px 6px rgba(0,0,0,0.20);
+  overflow:visible; cursor:pointer; isolation:isolate;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+#appTabs { width:min(380px, 94vw); }
+.tabs .knob {
+  position:absolute; top:5px; left:5px; width:88px; height:50px;
+  border-radius:25px; isolation:isolate; z-index:2; cursor:grab;
+  transform-origin:center center;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  outline:1px solid transparent;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(7px) saturate(220%) brightness(1.14) contrast(1.04);
+  -webkit-backdrop-filter:blur(7px) saturate(220%) brightness(1.14) contrast(1.04);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.28) inset,
+    0 1.5px 0.5px -0.5px rgba(255,255,255,0.70) inset,
+    0 -1.5px 1.5px 0 rgba(0,0,0,0.22) inset,
+    0 1px 0 0 rgba(255,255,255,0.35),
+    0 -1px 0 0 rgba(0,0,0,0.18),
+    0 12px 22px rgba(0,0,0,0.45),
+    0 5px 10px rgba(0,0,0,0.30),
+    0 1px 3px rgba(0,0,0,0.20);
+  overflow:hidden; transform:translateZ(0); touch-action:none;
+  transition:backdrop-filter 0.2s ease-out, -webkit-backdrop-filter 0.2s ease-out,
+             box-shadow 0.2s ease-out, background 0.2s ease-out;
+}
+.tabs .knob:active { cursor:grabbing; }
+.tabs .knob.is-active {
+  will-change:transform; background:rgba(255,255,255,0.02);
+  backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  -webkit-backdrop-filter:blur(1.5px) saturate(420%) brightness(1.28) contrast(1.6);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.38) inset,
+    0 2px 1px -0.5px rgba(255,255,255,1.0) inset,
+    0 -2px 2px 0 rgba(0,0,0,0.40) inset,
+    0 1px 0 0 rgba(255,255,255,0.55),
+    0 -1px 0 0 rgba(0,0,0,0.28),
+    0 22px 40px rgba(0,0,0,0.72),
+    0 10px 20px rgba(0,0,0,0.50),
+    0 3px 6px rgba(0,0,0,0.32);
+}
+.tabs .knob .gloss, .tabs .knob .top-glow, .tabs .knob .lens,
+.tabs .knob .inner-shadow, .tabs .knob .ripple-layer {
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.tabs .knob .gloss {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.04) 78%, rgba(255,255,255,0.06) 95%, rgba(255,255,255,0.14) 100%);
+  z-index:2; mix-blend-mode:screen; transition:background 0.2s ease-out;
+}
+.tabs .knob.is-active .gloss {
+  background:linear-gradient(160deg,
+    rgba(255,255,255,0.80) 0%, rgba(255,255,255,0.32) 10%,
+    rgba(255,255,255,0) 34%, rgba(255,255,255,0) 58%,
+    rgba(0,0,0,0.06) 78%, rgba(255,255,255,0.14) 95%, rgba(255,255,255,0.24) 100%);
+}
+.tabs .knob .top-glow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 72%);
+  z-index:3; transition:background 0.2s ease-out;
+}
+.tabs .knob.is-active .top-glow {
+  background:radial-gradient(ellipse 70% 34% at 50% 0%,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 72%);
+}
+.tabs .knob .lens {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:4; opacity:0;
+  transition:opacity 0.22s ease-out, filter 0.22s ease-out;
+  background:radial-gradient(ellipse 60% 72% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,0.60) 0%, rgba(255,255,255,0.14) 38%, transparent 72%);
+  mix-blend-mode:overlay; filter:blur(1.5px) contrast(1.10);
+}
+.tabs .knob.is-active .lens {
+  opacity:1;
+  background:radial-gradient(ellipse 66% 78% at var(--lx,50%) var(--ly,50%),
+    rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 28%,
+    rgba(255,255,255,0.08) 56%, transparent 82%);
+  mix-blend-mode:overlay; filter:blur(0.2px) contrast(2.4) saturate(2.8);
+}
+.tabs .knob .inner-shadow {
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  z-index:5; opacity:0;
+  transition:opacity 0.22s ease-out, box-shadow 0.22s ease-out;
+  box-shadow:
+    0 0 14px 2px rgba(0,0,0,0.45) inset,
+    0 0 3px 1px rgba(0,0,0,0.32) inset,
+    0 1.5px 1px -1px rgba(255,255,255,0.20) inset,
+    0 -1.5px 1px -1px rgba(255,255,255,0.12) inset;
+}
+.tabs .knob.is-active .inner-shadow {
+  opacity:1;
+  box-shadow:
+    0 0 34px 9px rgba(0,0,0,0.78) inset,
+    0 0 10px 3px rgba(0,0,0,0.55) inset,
+    0 2px 1px -1px rgba(255,255,255,0.38) inset,
+    0 -2px 1px -1px rgba(255,255,255,0.25) inset;
+}
+.tabs .knob .ripple-layer {
+  position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+  pointer-events:none; z-index:6;
+}
+.tabs .knob .ripple {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.85) 0%,
+    rgba(255,255,255,0.35) 40%, transparent 70%);
+  transform:translate(-50%,-50%) scale(0);
+  animation:tabsRippleGrow 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  pointer-events:none;
+}
+@keyframes tabsRippleGrow {
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(16);opacity:0;}
+}
+.tabs .tab {
+  position:absolute; top:0; bottom:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; z-index:3; pointer-events:none;
+  color:rgba(255,255,255,0.72); font-size:10px; font-weight:500;
+  letter-spacing:0.01em; line-height:1;
+  text-shadow:0 1px 1px rgba(0,0,0,0.35);
+  transition:color .25s ease, transform .25s cubic-bezier(0.34,1.4,0.64,1);
+  transform:scale(1);
+}
+.tabs .tab.active {
+  color:#fff; transform:scale(1.06);
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,0.45));
+}
+.tabs .tab .icon { width:20px; height:20px; display:block; opacity:0.9;
+  transition:opacity .25s ease; }
+.tabs .tab.active .icon { opacity:1; }
+.tabs .tab .label { font-size:10px; font-weight:500; line-height:1; opacity:0.85; }
+.tabs .tab.active .label { opacity:1; }
+
+/* ============================================================ ОБЩЕЕ */
+body {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,80,120,0.4) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 25%, rgba(120,80,255,0.45) 0%, transparent 45%),
+    radial-gradient(ellipse at 25% 85%, rgba(80,220,255,0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 85%, rgba(255,200,80,0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(200,80,255,0.35) 0%, transparent 55%),
+    linear-gradient(160deg, #12122e 0%, #05050f 40%, #0e0518 100%);
+  min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  padding:24px 16px 60px; gap:22px; overflow-x:hidden;
+}
+.app-window {
+  width:min(440px,96vw); min-height:460px;
+  padding:26px 22px; border-radius:32px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.14) inset,
+    0 1px 0 0 rgba(255,255,255,0.3) inset,
+    0 -1px 0 0 rgba(0,0,0,0.15) inset,
+    0 24px 60px rgba(0,0,0,0.5),
+    0 8px 20px rgba(0,0,0,0.3);
+  display:none; flex-direction:column; align-items:center; gap:18px;
+  position:relative; overflow:hidden;
+}
+.app-window.active { display:flex; animation:appIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes appIn {
+  0% { opacity:0; transform:scale(0.95) translateY(12px); }
+  100% { opacity:1; transform:scale(1) translateY(0); }
+}
+.app-header {
+  display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:2px;
+}
+.app-header .emoji { font-size:32px; line-height:1; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+.app-header h2 {
+  font-size:20px; font-weight:700; color:#fff; letter-spacing:-0.02em;
+  text-shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+.app-header p {
+  font-size:12px; color:rgba(255,255,255,0.6); letter-spacing:0.02em; text-align:center;
+}
+
+/* ============================================================ КЕЙСЫ */
+.case-balance {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 18px; border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px) saturate(180%);
+  -webkit-backdrop-filter:blur(12px) saturate(180%);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset, 0 4px 14px rgba(0,0,0,0.3);
+  font-variant-numeric:tabular-nums;
+}
+.case-balance .cb-icon { font-size:16px; }
+.case-balance .cb-value { font-size:16px; font-weight:700; color:#ffd60a;
+  text-shadow:0 0 12px rgba(255,214,10,0.5); }
+.case-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; }
+.case-card {
+  padding:12px 6px; border-radius:18px; border:none; cursor:pointer;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(12px) saturate(160%);
+  -webkit-backdrop-filter:blur(12px) saturate(160%);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.12) inset, 0 4px 12px rgba(0,0,0,0.2);
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  color:#fff; font-family:inherit; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.case-card:active { transform:scale(0.95); }
+.case-card.active {
+  background:rgba(255,255,255,0.12);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.4) inset,
+    0 0 24px var(--case-glow, rgba(0,255,255,0.4)),
+    0 4px 16px rgba(0,0,0,0.3);
+  transform:scale(1.04);
+}
+.case-card .cc-emoji { font-size:24px; }
+.case-card .cc-name { font-size:10px; font-weight:700; letter-spacing:0.05em;
+  text-transform:uppercase; }
+.case-card .cc-price { font-size:10px; color:#ffd60a; font-weight:600; }
+
+.roulette-wrap {
+  position:relative; width:100%; height:130px; border-radius:20px;
+  overflow:hidden; background:rgba(0,0,0,0.3);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.12) inset, 0 8px 24px rgba(0,0,0,0.4) inset;
+}
+.roulette-strip {
+  position:absolute; top:50%; left:0; transform:translateY(-50%);
+  display:flex; gap:8px; padding:0 8px;
+  will-change:transform;
+}
+.roulette-item {
+  width:96px; height:96px; border-radius:16px; flex-shrink:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; font-size:9px; font-weight:700; letter-spacing:0.04em;
+  text-transform:uppercase; color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,0.6);
+  box-shadow:0 0 0 2px var(--item-color, #fff) inset,
+    0 0 20px var(--item-glow, rgba(255,255,255,0.4)),
+    0 4px 12px rgba(0,0,0,0.3);
+  position:relative; overflow:hidden;
+}
+.roulette-item::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(160deg, rgba(255,255,255,0.3) 0%, transparent 40%);
+}
+.roulette-item .ri-emoji { font-size:28px; line-height:1; position:relative; }
+.roulette-item .ri-name { font-size:8px; opacity:0.9; position:relative; }
+.roulette-pointer {
+  position:absolute; top:0; bottom:0; left:50%;
+  width:3px; transform:translateX(-50%);
+  background:linear-gradient(to bottom,
+    transparent 0%, #fff 15%, #fff 85%, transparent 100%);
+  box-shadow:0 0 20px rgba(255,255,255,0.9), 0 0 40px rgba(0,255,255,0.6);
+  z-index:5; pointer-events:none;
+}
+.roulette-pointer::before,
+.roulette-pointer::after {
+  content:''; position:absolute; left:50%; transform:translateX(-50%);
+  width:0; height:0; border-left:8px solid transparent;
+  border-right:8px solid transparent;
+}
+.roulette-pointer::before { top:0; border-top:10px solid #fff; }
+.roulette-pointer::after { bottom:0; border-bottom:10px solid #fff; }
+
+.inventory {
+  display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%;
+  max-height:130px; overflow-y:auto; padding:4px;
+}
+.inv-slot {
+  aspect-ratio:1; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; position:relative;
+  background:rgba(255,255,255,0.05);
+  box-shadow:0 0 0 1px var(--item-color, rgba(255,255,255,0.15)) inset;
+  animation:invPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes invPop {
+  0% { transform:scale(0); opacity:0; }
+  100% { transform:scale(1); opacity:1; }
+}
+.result-modal {
+  position:absolute; inset:0; z-index:20;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(5,5,15,0.75);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-radius:32px;
+}
+.result-modal.show { display:flex; animation:appIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.result-modal .rm-inner {
+  padding:28px 32px; border-radius:24px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 0 0 2px var(--result-color, #fff) inset,
+    0 0 60px var(--result-glow, rgba(255,255,255,0.4)),
+    0 20px 60px rgba(0,0,0,0.6);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  animation:winnerPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes winnerPop {
+  0% { transform:scale(0.5) rotate(-5deg); }
+  100% { transform:scale(1) rotate(0); }
+}
+.result-modal .rm-emoji { font-size:52px; line-height:1; }
+.result-modal .rm-name { font-size:18px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+.result-modal .rm-rarity {
+  font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--result-color, #fff); text-shadow:0 0 12px var(--result-glow, rgba(255,255,255,0.5));
+}
+.result-modal .rm-close {
+  margin-top:8px; padding:10px 24px; border-radius:999px; border:none;
+  background:rgba(255,255,255,0.15); color:#fff; font-weight:600; font-size:13px;
+  cursor:pointer; font-family:inherit;
+  backdrop-filter:blur(10px);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.2) inset;
+}
+.result-modal .rm-close:active { transform:scale(0.95); }
+
+/* ============================================================ АПГРЕЙДЕР */
+.upgrade-mode-tabs {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+}
+.upgrade-mode-tabs .knob {
+  top: 5px !important;
+  left: 5px !important;
+  height: 34px !important;
+  border-radius: 17px !important;
+}
+.upgrade-mode-tabs .tab {
+  gap: 5px;
+  flex-direction: row;
+  font-size: 12px;
+  font-weight: 600;
+}
+.upgrade-mode-tabs .tab .icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+.upgrade-mode-tabs .tab .label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.upgrade-panel {
+  width: 100%;
+  max-width: 100%;
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  align-self: center;
+  margin: 0 auto;
+}
+.upgrade-panel.active {
+  display: flex;
+  animation: appIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.upgrade-empty {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 32px 20px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  align-self: center;
+  margin: 0 auto;
+}
+.upgrade-empty .ue-emoji { font-size:44px; opacity:0.5; }
+.upgrade-empty .ue-text { font-size:13px; color:rgba(255,255,255,0.6); line-height:1.4; }
+
+.upgrade-item {
+  width:100%; padding:18px; border-radius:22px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:0 0 0 1px var(--item-color, rgba(255,255,255,0.15)) inset,
+    0 0 30px var(--item-glow, transparent),
+    0 6px 20px rgba(0,0,0,0.3);
+  display:flex; align-items:center; gap:14px;
+  position:relative; overflow:hidden;
+  transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.upgrade-item .ui-emoji {
+  width:56px; height:56px; border-radius:16px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  background:rgba(0,0,0,0.2);
+  box-shadow:0 0 0 2px var(--item-color, #fff) inset;
+}
+.upgrade-item .ui-info { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.upgrade-item .ui-name { font-size:15px; font-weight:700; color:#fff; }
+.upgrade-item .ui-rarity {
+  font-size:9px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase;
+  color:var(--item-color, #fff);
+}
+.upgrade-item .ui-price {
+  font-size:12px; font-weight:600; color:#ffd60a;
+  font-variant-numeric:tabular-nums;
+}
+.upgrade-item.win {
+  box-shadow:0 0 0 2px #34c759 inset, 0 0 60px rgba(52,199,89,0.6),
+    0 6px 20px rgba(0,0,0,0.3);
+  animation:winPulse 0.6s ease-out;
+}
+@keyframes winPulse {
+  0%,100% { transform:scale(1); }
+  50% { transform:scale(1.06); }
+}
+.upgrade-item.lose {
+  box-shadow:0 0 0 2px #ff453a inset, 0 0 60px rgba(255,69,58,0.5),
+    0 6px 20px rgba(0,0,0,0.3);
+  animation:loseShake 0.5s ease-out;
+}
+@keyframes loseShake {
+  0%,100% { transform:translateX(0); }
+  20% { transform:translateX(-8px); }
+  40% { transform:translateX(8px); }
+  60% { transform:translateX(-5px); }
+  80% { transform:translateX(5px); }
+}
+
+.upgrade-bet-wrap {
+  width:100%; padding:14px 16px; border-radius:18px;
+  background:rgba(255,255,255,0.05);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset;
+  display:flex; flex-direction:column; gap:8px;
+}
+.upgrade-bet-head {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.upgrade-bet-head .ub-label {
+  font-size:11px; font-weight:700; color:rgba(255,255,255,0.7);
+  text-transform:uppercase; letter-spacing:0.1em;
+}
+.upgrade-bet-head .ub-value {
+  font-size:14px; font-weight:700; color:#ffd60a;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 0 12px rgba(255,214,10,0.4);
+}
+.upgrade-bet-hint {
+  font-size:10px; color:rgba(255,255,255,0.45);
+  text-align:center; letter-spacing:0.02em;
+}
+
+.chance-bar-wrap { width:100%; display:flex; flex-direction:column; gap:8px; }
+.chance-bar {
+  width:100%; height:36px; border-radius:12px; overflow:hidden;
+  display:flex; position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.15) inset, 0 4px 14px rgba(0,0,0,0.3);
+}
+.chance-seg {
+  height:100%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff; letter-spacing:0.05em;
+  text-shadow:0 1px 2px rgba(0,0,0,0.5);
+  transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.chance-seg.win-seg {
+  background:linear-gradient(90deg, #34c759, #30d158);
+  box-shadow:0 0 20px rgba(52,199,89,0.5) inset;
+}
+.chance-seg.lose-seg {
+  background:linear-gradient(90deg, #ff453a, #ff6b5e);
+  box-shadow:0 0 20px rgba(255,69,58,0.5) inset;
+}
+.upgrade-meta {
+  display:flex; justify-content:space-between; width:100%;
+  padding:0 4px; font-size:11px;
+}
+.upgrade-meta .um-label { color:rgba(255,255,255,0.5); text-transform:uppercase;
+  letter-spacing:0.08em; font-weight:600; }
+.upgrade-meta .um-value { color:#fff; font-weight:700; font-variant-numeric:tabular-nums; }
+
+.roulette-up-wrap {
+  position:relative; width:260px; height:260px; margin:0 auto;
+  display:flex; align-items:center; justify-content:center;
+}
+.roulette-up-svg {
+  position:absolute; inset:0; width:100%; height:100%;
+  transform:rotate(-90deg);
+}
+.roulette-up-arrow {
+  position:absolute; top:50%; left:50%;
+  width:0; height:0;
+  border-left:11px solid transparent;
+  border-right:11px solid transparent;
+  border-bottom:160px solid rgba(255,255,255,0.92);
+  transform-origin:50% 100%;
+  transform:translate(-50%, -100%) rotate(0deg);
+  filter:drop-shadow(0 0 12px rgba(255,255,255,0.7));
+  transition:transform 4s cubic-bezier(0.15, 0.85, 0.25, 1);
+  z-index:5;
+}
+.roulette-up-center {
+  position:relative; z-index:6;
+  width:76px; height:76px; border-radius:50%;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(16px) saturate(180%);
+  -webkit-backdrop-filter:blur(16px) saturate(180%);
+  box-shadow:0 0 0 2px rgba(255,255,255,0.25) inset,
+    0 8px 30px rgba(0,0,0,0.5);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; font-size:10px; font-weight:700; color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,0.5);
+}
+.roulette-up-center .ruc-emoji { font-size:26px; line-height:1; }
+.roulette-up-center .ruc-label { font-size:8px; letter-spacing:0.06em; opacity:0.8;
+  max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.upgrade-history {
+  width:100%; display:flex; gap:6px; flex-wrap:wrap; min-height:30px;
+  padding:8px; border-radius:14px; background:rgba(0,0,0,0.2);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+.history-chip {
+  padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700;
+  letter-spacing:0.02em; animation:invPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.history-chip.win {
+  background:rgba(52,199,89,0.25); color:#34c759;
+  box-shadow:0 0 0 1px rgba(52,199,89,0.5) inset;
+}
+.history-chip.lose {
+  background:rgba(255,69,58,0.2); color:#ff453a;
+  box-shadow:0 0 0 1px rgba(255,69,58,0.4) inset;
+}
+
+/* ============================================================ ПРОФИЛЬ */
+.profile-card {
+  position: relative;
+  width: 100%;
+  padding: 22px 20px 20px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%,
+      rgba(255,255,255,0.04) 60%,
+      rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.14) inset,
+    0 1px 0 0 rgba(255,255,255,0.28) inset,
+    0 -1px 0 0 rgba(0,0,0,0.18) inset,
+    0 14px 40px rgba(0,0,0,0.45),
+    0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: 50%;
+  width: 140%; height: 100%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 60% 100% at 50% 0%,
+    rgba(255,120,180,0.35) 0%,
+    rgba(120,80,255,0.22) 35%,
+    transparent 70%);
+  pointer-events: none;
+  filter: blur(24px);
+}
+.profile-avatar-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-avatar-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    #ff5c8a, #a05cff, #5c8bff, #34c759, #ffd60a, #ff5c8a);
+  animation: profileRingSpin 6s linear infinite;
+  filter: blur(6px);
+  opacity: 0.55;
+}
+@keyframes profileRingSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.profile-avatar {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35) 0%, transparent 55%),
+    linear-gradient(160deg, #ff5c8a 0%, #a05cff 55%, #5c8bff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46px;
+  box-shadow:
+    0 0 0 4px rgba(20,20,30,0.55),
+    0 0 0 5px rgba(255,255,255,0.18),
+    0 0 40px rgba(255,80,140,0.55),
+    0 10px 24px rgba(0,0,0,0.55);
+  z-index: 2;
+}
+.profile-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%,
+    rgba(255,255,255,0.5) 0%, transparent 60%);
+  pointer-events: none;
+}
+.profile-online {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #34c759;
+  border: 3px solid rgba(20,20,30,0.9);
+  box-shadow: 0 0 12px rgba(52,199,89,0.9);
+  z-index: 3;
+}
+.profile-name {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profile-level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #1a1a2e;
+  background: linear-gradient(180deg, #ffe066, #ffb800);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.5) inset,
+    0 2px 6px rgba(255,160,0,0.55),
+    0 0 14px rgba(255,190,20,0.5);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+.profile-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  z-index: 1;
+}
+.profile-xp {
+  width: 100%;
+  margin-top: 12px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.profile-xp-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  font-weight: 700;
+}
+.profile-xp-head .pxp-value {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+.profile-xp-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.35);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10) inset,
+    0 2px 6px rgba(0,0,0,0.4) inset;
+  overflow: hidden;
+}
+.profile-xp-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34c759 0%, #4df7ff 50%, #a05cff 100%);
+  box-shadow:
+    0 0 12px rgba(77,247,255,0.7),
+    0 0 20px rgba(160,92,255,0.5),
+    0 1px 0 0 rgba(255,255,255,0.7) inset;
+  transition: width 0.9s cubic-bezier(0.34,1.56,0.64,1);
+}
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  z-index: 1;
+}
+.stat-box {
+  position: relative;
+  padding: 12px 6px 10px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.08) 0%,
+      rgba(255,255,255,0.03) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10) inset,
+    0 4px 14px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  overflow: hidden;
+  transition: transform .2s ease;
+}
+.stat-box:active { transform: scale(0.97); }
+.stat-box .sb-icon {
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
+}
+.stat-box .sb-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffd60a;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 14px rgba(255,214,10,0.5);
+  line-height: 1.1;
+}
+.stat-box .sb-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.55);
+  font-weight: 700;
+}
+.stat-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  pointer-events: none;
+}
+.profile-achievements {
+  width: 100%;
+  margin-top: 12px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.12) 0%,
+    rgba(255,255,255,0.05) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.14) inset,
+    0 4px 10px rgba(0,0,0,0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.ach-chip.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.ach-chip .ac-emoji { font-size: 13px; line-height: 1; }
+
+.profile-inventory-title {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: -4px;
+  padding: 0 4px;
+}
+.profile-inventory-title .pit-count {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  text-transform: none;
+}
+.profile-inventory {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.profile-inventory::-webkit-scrollbar { width: 6px; }
+.profile-inventory::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+.profile-inv-slot {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  position: relative;
+  cursor: pointer;
+  background:
+    linear-gradient(160deg,
+      rgba(255,255,255,0.08) 0%,
+      rgba(255,255,255,0.02) 60%,
+      rgba(0,0,0,0.12) 100%);
+  box-shadow:
+    0 0 0 1px var(--item-color, rgba(255,255,255,0.15)) inset,
+    0 0 16px var(--item-glow, transparent),
+    0 4px 12px rgba(0,0,0,0.3);
+  animation: invPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow .2s ease;
+}
+.profile-inv-slot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg,
+    rgba(255,255,255,0.22) 0%, transparent 45%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.profile-inv-slot:active {
+  transform: scale(0.9);
+  box-shadow:
+    0 0 0 1px var(--item-color, rgba(255,255,255,0.3)) inset,
+    0 0 26px var(--item-glow, transparent),
+    0 6px 16px rgba(0,0,0,0.4);
+}
+.profile-inv-slot .pis-count {
+  position: absolute;
+  bottom: 3px; right: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffd60a;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(255,214,10,0.6);
+}
+.empty-inventory {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 30px 20px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  border-radius: 18px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.01) 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.empty-inventory .ei-emoji {
+  font-size: 40px;
+  opacity: 0.5;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+}
+.empty-inventory .ei-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.02em;
+}
+.empty-inventory .ei-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ============================================================ ТОСТ */
+.toast {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px);
+  padding:12px 22px; border-radius:999px;
+  background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(20px) saturate(200%);
+  -webkit-backdrop-filter:blur(20px) saturate(200%);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.2) inset, 0 12px 40px rgba(0,0,0,0.5);
+  color:#fff; font-size:14px; font-weight:600;
+  z-index:100; opacity:0;
+  transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="tabs" id="appTabs" data-lg-tabs>
+  <div class="knob">
+    <span class="gloss"></span><span class="top-glow"></span>
+    <span class="lens"></span><span class="inner-shadow"></span>
+    <span class="ripple-layer"></span>
+  </div>
+  <div class="tab active" data-index="0">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
+    </svg>
+    <span class="label">Кейсы</span>
+  </div>
+  <div class="tab" data-index="1">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>
+    </svg>
+    <span class="label">Апгрейд</span>
+  </div>
+  <div class="tab" data-index="2">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    <span class="label">Профиль</span>
+  </div>
+</div>
+
+<div class="app-window active" id="app-cases">
+  <div class="app-header">
+    <span class="emoji">🎁</span>
+    <h2>Открытие кейсов</h2>
+    <p>Крути рулетку — выбивай редкие скины</p>
+  </div>
+
+  <div class="case-balance">
+    <span class="cb-icon">💰</span>
+    <span class="cb-value" id="caseBalance">1000</span>
+    <span style="font-size:11px;color:rgba(255,255,255,0.5);">₽</span>
+  </div>
+
+  <div class="case-picker" id="casePicker"></div>
+
+  <div class="roulette-wrap">
+    <div class="roulette-strip" id="rouletteStrip"></div>
+    <div class="roulette-pointer"></div>
+  </div>
+
+  <button class="lg-pill" id="openCaseBtn" style="width:100%;" type="button" data-lg-pill>
+    <span class="lens"></span><span class="inner-shadow"></span>
+    <span class="ripple-layer"></span>
+    <span class="content">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span class="label" id="openCaseLabel">Открыть · 100 ₽</span>
+    </span>
+  </button>
+
+  <div style="width:100%;">
+    <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.12em;font-weight:600;margin-bottom:6px;">
+      Инвентарь · <span id="invCount">0</span> предметов
+    </div>
+    <div class="inventory" id="inventory"></div>
+  </div>
+
+  <div class="result-modal" id="resultModal">
+    <div class="rm-inner" id="resultInner">
+      <span class="rm-emoji" id="rmEmoji">🎁</span>
+      <span class="rm-rarity" id="rmRarity">COMMON</span>
+      <span class="rm-name" id="rmName">Item</span>
+      <button class="rm-close" id="rmClose">Забрать</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-window" id="app-upgrade">
+  <div class="app-header">
+    <span class="emoji">⬆️</span>
+    <h2>Апгрейдер</h2>
+    <p>Только предметы из инвентаря</p>
+  </div>
+
+  <div class="tabs upgrade-mode-tabs" id="upgradeModeTabs" data-lg-tabs>
+    <div class="knob">
+      <span class="gloss"></span><span class="top-glow"></span>
+      <span class="lens"></span><span class="inner-shadow"></span>
+      <span class="ripple-layer"></span>
+    </div>
+    <div class="tab active" data-index="0">
+      <span class="icon">🎯</span>
+      <span class="label">Классика</span>
+    </div>
+    <div class="tab" data-index="1">
+      <span class="icon">🎡</span>
+      <span class="label">Кружочек</span>
+    </div>
+  </div>
+
+  <div class="upgrade-panel active" id="upgradeClassic">
+    <div id="classicContent"></div>
+  </div>
+
+  <div class="upgrade-panel" id="upgradeWheel">
+    <div id="wheelContent"></div>
+  </div>
+</div>
+
+<div class="app-window" id="app-profile">
+  <div class="app-header">
+    <span class="emoji">👤</span>
+    <h2>Профиль</h2>
+    <p>Твои предметы и статистика</p>
+  </div>
+
+  <div class="profile-card">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">🐉</div>
+      <div class="profile-online"></div>
+    </div>
+
+    <div class="profile-name">
+      Игрок
+      <span class="profile-level-badge" id="profileLevel">LVL 1</span>
+    </div>
+    <div class="profile-sub">Liquid Glass Collector</div>
+
+    <div class="profile-xp">
+      <div class="profile-xp-head">
+        <span>Уровень</span>
+        <span class="pxp-value" id="profileXpText">0 / 100 XP</span>
+      </div>
+      <div class="profile-xp-track">
+        <div class="profile-xp-fill" id="profileXpFill"></div>
+      </div>
+    </div>
+
+    <div class="profile-stats">
+      <div class="stat-box">
+        <span class="sb-icon">💰</span>
+        <span class="sb-value" id="profileBalance">1000</span>
+        <span class="sb-label">Баланс ₽</span>
+      </div>
+      <div class="stat-box">
+        <span class="sb-icon">📦</span>
+        <span class="sb-value" id="profileItems">0</span>
+        <span class="sb-label">Предметов</span>
+      </div>
+      <div class="stat-box">
+        <span class="sb-icon">💎</span>
+        <span class="sb-value" id="profileValue">0</span>
+        <span class="sb-label">Стоимость ₽</span>
+      </div>
+    </div>
+
+    <div class="profile-achievements" id="profileAchievements"></div>
+  </div>
+
+  <div class="profile-inventory-title">
+    <span>📦 Инвентарь</span>
+    <span class="pit-count" id="profileInvCount">0 предметов</span>
+  </div>
+  <div class="profile-inventory" id="profileInventory"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+ * LIQUID GLASS UI — библиотека
+ * ============================================================ */
+(function (global) {
+  'use strict';
+  function getPoint(e) {
+    if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+  function safeMeasure(el, fallback) {
+    var v = el ? el.offsetWidth : 0;
+    return v > 0 ? v : fallback;
+  }
+
+  function Pill(button, opts) {
+    opts = opts || {};
+    this.button = button; this.onAction = opts.onAction || null;
+    var self = this;
+    this.state = { pressProgress:0, targetPress:0,
+      offset:{x:0,y:0}, targetOffset:{x:0,y:0}, isPressed:false, rafId:null };
+    this._tick = function () {
+      var s = self.state;
+      s.pressProgress += (s.targetPress - s.pressProgress) * 0.18;
+      s.offset.x += (s.targetOffset.x - s.offset.x) * 0.22;
+      s.offset.y += (s.targetOffset.y - s.offset.y) * 0.22;
+      self._apply();
+      var needContinue =
+        Math.abs(s.targetPress - s.pressProgress) > 0.001 ||
+        Math.abs(s.targetOffset.x - s.offset.x) > 0.1 ||
+        Math.abs(s.targetOffset.y - s.offset.y) > 0.1;
+      if (needContinue || s.isPressed) { s.rafId = requestAnimationFrame(self._tick); }
+      else { s.pressProgress = s.targetPress; s.offset.x = s.targetOffset.x;
+        s.offset.y = s.targetOffset.y; self._apply(); s.rafId = null; }
+    };
+    this._start = function () { if (self.state.rafId == null) self.state.rafId = requestAnimationFrame(self._tick); };
+    this._onStart = function (e) {
+      self.state.isPressed = true; self.state.targetPress = 1;
+      button.classList.add('is-active'); self._start();
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch(_) {} }
+      self._updateOffset(e);
+    };
+    this._onMove = function (e) {
+      if (!self.state.isPressed) return;
+      self._updateOffset(e); self._start();
+    };
+    this._onEnd = function () {
+      if (!self.state.isPressed) return;
+      self.state.isPressed = false; self.state.targetPress = 0;
+      self.state.targetOffset.x = 0; self.state.targetOffset.y = 0;
+      button.classList.remove('is-active'); self._start();
+    };
+    this._onMouseDown = function (e) { self._onStart(e); self._spawnRipple(e); };
+    this._onTouchStart = function (e) { e.preventDefault(); self._onStart(e); self._spawnRipple(e); };
+    this._onTouchMove = function (e) { if (self.state.isPressed) { e.preventDefault(); self._onMove(e); } };
+    this._onClick = function (e) { if (e.detail === 0) return; if (self.onAction) self.onAction(e, self); };
+    button.addEventListener('mousedown', this._onMouseDown);
+    global.addEventListener('mousemove', this._onMove);
+    global.addEventListener('mouseup', this._onEnd);
+    button.addEventListener('touchstart', this._onTouchStart, { passive:false });
+    global.addEventListener('touchmove', this._onTouchMove, { passive:false });
+    global.addEventListener('touchend', this._onEnd);
+    global.addEventListener('touchcancel', this._onEnd);
+    button.addEventListener('click', this._onClick);
+    button.style.setProperty('--lx','50%'); button.style.setProperty('--ly','50%');
+  }
+  Pill.prototype._apply = function () {
+    var s = this.state, button = this.button;
+    var rect = button.getBoundingClientRect();
+    var w = rect.width, h = rect.height; if (!w || !h) return;
+    var minDim = Math.min(w, h), maxDim = Math.max(w, h);
+    var progress = s.pressProgress, dp = h / 52;
+    var scale = 1 + (4 * dp / h) * progress;
+    var maxOffset = minDim;
+    var tx = maxOffset * Math.tanh(0.05 * s.offset.x / maxOffset);
+    var ty = maxOffset * Math.tanh(0.05 * s.offset.y / maxOffset);
+    var maxDragScale = 4 * dp / h;
+    var angle = Math.atan2(s.offset.y, s.offset.x);
+    var wOverH = Math.min(w / h, 1), hOverW = Math.min(h / w, 1);
+    var scaleX = scale + maxDragScale * Math.abs(Math.cos(angle) * s.offset.x / maxDim) * wOverH;
+    var scaleY = scale + maxDragScale * Math.abs(Math.sin(angle) * s.offset.y / maxDim) * hOverW;
+    button.style.transform = 'translate3d('+tx+'px,'+ty+'px,0) scale('+scaleX+','+scaleY+')';
+    button.style.setProperty('--lx', (50 + (s.offset.x/w)*100)+'%');
+    button.style.setProperty('--ly', (50 + (s.offset.y/h)*100)+'%');
+    var content = button.querySelector('.content');
+    if (content) content.style.transform = 'scale('+(1 - 0.05*progress)+')';
+  };
+  Pill.prototype._updateOffset = function (e) {
+    var button = this.button;
+    var rect = button.getBoundingClientRect();
+    var p = getPoint(e);
+    var mx = rect.left + rect.width/2, my = rect.top + rect.height/2;
+    var maxOff = Math.max(rect.width, rect.height) * 0.6;
+    var dx = p.x - mx, dy = p.y - my;
+    var len = Math.hypot(dx, dy);
+    if (len > maxOff) { dx = dx/len*maxOff; dy = dy/len*maxOff; }
+    this.state.targetOffset.x = dx; this.state.targetOffset.y = dy;
+  };
+  Pill.prototype._spawnRipple = function (e) {
+    var layer = this.button.querySelector('.ripple-layer'); if (!layer) return;
+    var rect = this.button.getBoundingClientRect(); var p = getPoint(e);
+    var r = document.createElement('span'); r.className = 'ripple';
+    r.style.left = (p.x-rect.left)+'px'; r.style.top = (p.y-rect.top)+'px';
+    layer.appendChild(r); setTimeout(function(){ r.remove(); }, 750);
+  };
+
+  function Toggle(track, opts) {
+    opts = opts || {};
+    this.track = track; this.knob = track.querySelector('.knob');
+    this.onChange = opts.onChange || null;
+    var self = this;
+    if (!this.knob) return;
+    this.state = { pressProgress:0, targetPress:0,
+      offset:{x:0,y:0}, targetOffset:{x:0,y:0}, isPressed:false, rafId:null };
+    this.toggle = { fraction:0, target:0, velocity:0, dragging:false, on:!!opts.checked, dragDelta:0 };
+    if (this.toggle.on) { this.toggle.fraction = 1; this.toggle.target = 1; track.classList.add('on'); }
+    this.pill = { stretch:0, targetStretch:0, lastPointerX:0, lastTime:0, lastSpeed:0 };
+    this.SPRING = { k:420, c:34, m:1 }; this.PAD = 3;
+    this.TRACK_W = 0; this.KNOB_W = 0; this.TRAVEL = 0; this.DRAG_LIMIT = 0;
+    this.SCALE_GROW = 0.5;
+    this.PILL_SPEED_DEAD = 320; this.PILL_SPEED_MAX = 1800;
+    this.PILL_DECAY = 0.955; this.PILL_STRETCH_X = 0.42;
+    this.PILL_SQUASH_Y = 0.20; this.PILL_FOLLOW = 16;
+    this._measure();
+    requestAnimationFrame(function () { self._measure(); });
+    global.addEventListener('resize', function () { self._measure(); });
+    this._last = performance.now();
+    this._tick = function (now) {
+      var dt = Math.min((now - self._last) / 1000, 0.033); self._last = now;
+      var t = self.toggle, s = self.state, pl = self.pill;
+      if (!t.dragging) {
+        var dx = t.fraction - t.target;
+        var a = (-self.SPRING.k * dx - self.SPRING.c * t.velocity) / self.SPRING.m;
+        t.velocity += a * dt; t.fraction += t.velocity * dt;
+        if (Math.abs(t.fraction - t.target) < 1e-4 && Math.abs(t.velocity) < 1e-3) {
+          t.fraction = t.target; t.velocity = 0;
+        }
+        t.dragDelta += (0 - t.dragDelta) * Math.min(1, dt * 20);
+      }
+      s.pressProgress += (s.targetPress - s.pressProgress) * 0.18;
+      s.offset.x += (s.targetOffset.x - s.offset.x) * 0.22;
+      s.offset.y += (s.targetOffset.y - s.offset.y) * 0.22;
+      pl.stretch += (pl.targetStretch - pl.stretch) * Math.min(1, dt * self.PILL_FOLLOW);
+      pl.targetStretch *= self.PILL_DECAY;
+      if (Math.abs(pl.targetStretch) < 0.004) pl.targetStretch = 0;
+      self._apply();
+      var needContinue =
+        Math.abs(s.targetPress - s.pressProgress) > 0.001 ||
+        Math.abs(s.targetOffset.x - s.offset.x) > 0.1 ||
+        Math.abs(s.targetOffset.y - s.offset.y) > 0.1 ||
+        Math.abs(t.target - t.fraction) > 1e-4 || Math.abs(t.velocity) > 1e-3 ||
+        Math.abs(t.dragDelta) > 0.1 || Math.abs(pl.stretch) > 0.004 ||
+        Math.abs(pl.targetStretch) > 0.004;
+      if (needContinue || s.isPressed || t.dragging) { s.rafId = requestAnimationFrame(self._tick); }
+      else { s.pressProgress = s.targetPress; s.offset.x = s.targetOffset.x;
+        s.offset.y = s.targetOffset.y; t.fraction = t.target; t.velocity = 0;
+        t.dragDelta = 0; pl.stretch = 0; pl.targetStretch = 0;
+        self._apply(); s.rafId = null; }
+    };
+    this._start = function () { if (self.state.rafId == null) self.state.rafId = requestAnimationFrame(self._tick); };
+    this._bind(); this._apply();
+  }
+  Toggle.prototype._measure = function () {
+    this.TRACK_W = safeMeasure(this.track, 80);
+    this.KNOB_W = safeMeasure(this.knob, 49);
+    this.TRAVEL = Math.max(1, this.TRACK_W - this.PAD * 2 - this.KNOB_W);
+  };
+  Toggle.prototype._apply = function () {
+    if (!this.knob) return;
+    var knob = this.knob;
+    var w = knob.offsetWidth || 49, h = knob.offsetHeight || 27;
+    var minDim = Math.min(w, h);
+    var s = this.state, t = this.toggle, pl = this.pill;
+    var progress = s.pressProgress;
+    var baseScale = 1 + this.SCALE_GROW * progress;
+    var st = pl.stretch * progress, absS = Math.abs(st);
+    var scaleX = baseScale + absS * this.PILL_STRETCH_X;
+    var scaleY = baseScale - absS * this.PILL_SQUASH_Y;
+    var originX = 50 + st * 30;
+    var maxOffset = minDim;
+    var tx = maxOffset * Math.tanh(0.05 * s.offset.x / maxOffset);
+    var ty = maxOffset * Math.tanh(0.05 * s.offset.y / maxOffset);
+    var baseX = this.PAD + t.fraction * this.TRAVEL;
+    var finalX = baseX + t.dragDelta;
+    var minX = this.PAD - this.DRAG_LIMIT, maxX = this.PAD + this.TRAVEL + this.DRAG_LIMIT;
+    if (finalX < minX) finalX = minX;
+    if (finalX > maxX) finalX = maxX;
+    var offsetX = finalX - this.PAD;
+    knob.style.transformOrigin = originX + '% 50%';
+    knob.style.transform = 'translate3d('+(offsetX+tx)+'px,'+ty+'px,0) scale('+scaleX+','+scaleY+')';
+    knob.style.setProperty('--lx', (50 + (s.offset.x/w)*100)+'%');
+    knob.style.setProperty('--ly', (50 + (s.offset.y/h)*100)+'%');
+  };
+  Toggle.prototype._bind = function () {
+    var self = this; var track = this.track, knob = this.knob;
+    var pid = null, startX = 0, startF = 0, moved = false;
+    function onDown(e, isKnob) {
+      if (pid !== null) return;
+      pid = e.pointerId;
+      try { (isKnob ? knob : track).setPointerCapture(pid); } catch(_) {}
+      self.state.isPressed = true; self.state.targetPress = 1;
+      knob.classList.add('is-active');
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch(_) {} }
+      self._updateOffset(e); self._spawnRipple(e);
+      self.toggle.dragging = true; self.toggle.velocity = 0; self.toggle.dragDelta = 0;
+      startX = e.clientX; startF = self.toggle.fraction; moved = false;
+      self.pill.lastPointerX = e.clientX; self.pill.lastTime = performance.now();
+      self.pill.lastSpeed = 0; self.pill.stretch = 0; self.pill.targetStretch = 0;
+      self._start(); e.preventDefault();
+    }
+    knob.addEventListener('pointerdown', function (e) { onDown(e, true); });
+    track.addEventListener('pointerdown', function (e) {
+      if (e.target === knob || knob.contains(e.target)) return;
+      onDown(e, false);
+    });
+    function onMove(e) {
+      if (e.pointerId !== pid) return;
+      self._updateOffset(e);
+      var dx = e.clientX - startX;
+      if (Math.abs(dx) > 2) moved = true;
+      var t = self.toggle;
+      var f = startF + dx / self.TRAVEL;
+      f = Math.max(0, Math.min(1, f));
+      t.fraction = f; t.target = f; t.velocity = 0;
+      var desiredX = startF * self.TRAVEL + dx;
+      var allowedX = t.fraction * self.TRAVEL;
+      t.dragDelta = desiredX - allowedX;
+      if (t.dragDelta > self.DRAG_LIMIT) t.dragDelta = self.DRAG_LIMIT;
+      if (t.dragDelta < -self.DRAG_LIMIT) t.dragDelta = -self.DRAG_LIMIT;
+      var nowOn = f >= 0.5;
+      if (nowOn !== t.on) { t.on = nowOn; track.classList.toggle('on', nowOn); }
+      var p = getPoint(e); var now = performance.now();
+      var dtMs = now - self.pill.lastTime; if (dtMs < 1) dtMs = 1;
+      var instDx = p.x - self.pill.lastPointerX;
+      var speed = (instDx / dtMs) * 1000;
+      self.pill.lastPointerX = p.x; self.pill.lastTime = now;
+      self.pill.lastSpeed = speed;
+      var absSpeed = Math.abs(speed); var targetMagnitude = 0;
+      if (absSpeed > self.PILL_SPEED_DEAD) {
+        var tt = (absSpeed - self.PILL_SPEED_DEAD) / (self.PILL_SPEED_MAX - self.PILL_SPEED_DEAD);
+        if (tt > 1) tt = 1;
+        targetMagnitude = Math.tanh(tt * 2.4) / Math.tanh(2.4);
+      }
+      var dir = speed >= 0 ? 1 : -1;
+      var newTarget = dir * targetMagnitude;
+      self.pill.targetStretch = self.pill.targetStretch * 0.5 + newTarget * 0.5;
+      if (self.pill.targetStretch > 1) self.pill.targetStretch = 1;
+      if (self.pill.targetStretch < -1) self.pill.targetStretch = -1;
+      self._start(); e.preventDefault();
+    }
+    function finish(e) {
+      if (e.pointerId !== pid) return;
+      try { knob.releasePointerCapture(pid); } catch(_) {}
+      try { track.releasePointerCapture(pid); } catch(_) {}
+      pid = null;
+      self.state.isPressed = false; self.state.targetPress = 0;
+      self.state.targetOffset.x = 0; self.state.targetOffset.y = 0;
+      knob.classList.remove('is-active');
+      var t = self.toggle; t.dragging = false;
+      if (moved) { t.target = t.fraction >= 0.5 ? 1 : 0; t.on = t.target === 1; }
+      else { t.on = !t.on; t.target = t.on ? 1 : 0; }
+      track.classList.toggle('on', t.on);
+      if (self.onChange) self.onChange(t.on, self);
+      self._start();
+    }
+    global.addEventListener('pointermove', onMove, { passive:false });
+    global.addEventListener('pointerup', finish);
+    global.addEventListener('pointercancel', finish);
+    knob.addEventListener('keydown', function (e) {
+      var t = self.toggle;
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault(); t.on = !t.on; t.target = t.on ? 1 : 0;
+        track.classList.toggle('on', t.on);
+        if (self.onChange) self.onChange(t.on, self);
+        self._start();
+      } else if (e.key === 'ArrowRight') {
+        t.on = true; t.target = 1; track.classList.add('on'); self._start();
+        if (self.onChange) self.onChange(t.on, self);
+      } else if (e.key === 'ArrowLeft') {
+        t.on = false; t.target = 0; track.classList.remove('on'); self._start();
+        if (self.onChange) self.onChange(t.on, self);
+      }
+    });
+  };
+  Toggle.prototype._updateOffset = function (e) {
+    var knob = this.knob; var rect = knob.getBoundingClientRect();
+    var p = getPoint(e);
+    var mx = rect.left + rect.width/2, my = rect.top + rect.height/2;
+    var maxOff = Math.max(rect.width, rect.height) * 0.6;
+    var dx = p.x - mx, dy = p.y - my;
+    var len = Math.hypot(dx, dy);
+    if (len > maxOff) { dx = dx/len*maxOff; dy = dy/len*maxOff; }
+    this.state.targetOffset.x = dx; this.state.targetOffset.y = dy;
+  };
+  Toggle.prototype._spawnRipple = function (e) {
+    var layer = this.knob.querySelector('.ripple-layer'); if (!layer) return;
+    var rect = this.knob.getBoundingClientRect(); var p = getPoint(e);
+    var r = document.createElement('span'); r.className = 'ripple';
+    r.style.left = (p.x-rect.left)+'px'; r.style.top = (p.y-rect.top)+'px';
+    layer.appendChild(r); setTimeout(function(){ r.remove(); }, 600);
+  };
+  Toggle.prototype.set = function (v) {
+    var t = this.toggle; t.on = !!v; t.target = t.on ? 1 : 0;
+    this.track.classList.toggle('on', t.on);
+    if (this.onChange) this.onChange(t.on, this);
+    this._start();
+  };
+
+  function Slider(sliderEl, opts) {
+    opts = opts || {};
+    this.sliderEl = sliderEl;
+    this.wrap = opts.wrap || sliderEl.closest('.slider-wrap') || sliderEl.parentElement;
+    this.onChange = opts.onChange || null;
+    this.knob = sliderEl.querySelector('.knob');
+    this.knobAmbient = sliderEl.querySelector('.knob-ambient');
+    this.fill = sliderEl.querySelector('.fill');
+    this.readout = this.wrap ? this.wrap.querySelector('.value-readout') : null;
+    if (!this.knob || !this.fill) return;
+    this.MIN = opts.min != null ? opts.min : 0;
+    this.MAX = opts.max != null ? opts.max : 100;
+    this.SUFFIX = opts.suffix || '';
+    var self = this;
+    this.state = { pressProgress:0, targetPress:0,
+      offset:{x:0,y:0}, targetOffset:{x:0,y:0}, isPressed:false, rafId:null };
+    this.slider = { fraction:0, target:0, velocity:0, dragging:false, dragDelta:0 };
+    this.pill = { stretch:0, targetStretch:0, lastPointerX:0, lastTime:0, lastSpeed:0 };
+    this.SPRING = { k:380, c:32, m:1 };
+    this.KNOB_W = 49; this.KNOB_H = 27;
+    this.SLIDER_W = 0; this.TRAVEL = 1;
+    this.DRAG_X_LIMIT = 4.5; this.DRAG_Y_FACTOR = 0.035;
+    this.OFFSET_LIMIT = 0.48; this.SCALE_GROW = 0.5;
+    this.PILL_SPEED_DEAD = 320; this.PILL_SPEED_MAX = 1800;
+    this.PILL_DECAY = 0.955; this.PILL_STRETCH_X = 0.42;
+    this.PILL_SQUASH_Y = 0.20; this.PILL_FOLLOW = 16;
+    this._measure();
+    requestAnimationFrame(function () { self._measure(); });
+    global.addEventListener('resize', function () { self._measure(); });
+    this._last = performance.now();
+    this._tick = function (now) {
+      var dt = Math.min((now - self._last) / 1000, 0.033); self._last = now;
+      var st = self.state, sl = self.slider, pl = self.pill;
+      if (!sl.dragging) {
+        var dx = sl.fraction - sl.target;
+        var a = (-self.SPRING.k * dx - self.SPRING.c * sl.velocity) / self.SPRING.m;
+        sl.velocity += a * dt; sl.fraction += sl.velocity * dt;
+        if (Math.abs(sl.fraction - sl.target) < 5e-4 && Math.abs(sl.velocity) < 5e-3) {
+          sl.fraction = sl.target; sl.velocity = 0;
+        }
+        sl.dragDelta += (0 - sl.dragDelta) * Math.min(1, dt * 22);
+      }
+      st.pressProgress += (st.targetPress - st.pressProgress) * 0.2;
+      st.offset.x += (st.targetOffset.x - st.offset.x) * 0.24;
+      st.offset.y += (st.targetOffset.y - st.offset.y) * 0.24;
+      pl.stretch += (pl.targetStretch - pl.stretch) * Math.min(1, dt * self.PILL_FOLLOW);
+      pl.targetStretch *= self.PILL_DECAY;
+      if (Math.abs(pl.targetStretch) < 0.004) pl.targetStretch = 0;
+      self._applyKnobTransform(); self._applyFill(); self._updateReadout();
+      var needContinue =
+        Math.abs(st.targetPress - st.pressProgress) > 0.002 ||
+        Math.abs(st.targetOffset.x - st.offset.x) > 0.2 ||
+        Math.abs(st.targetOffset.y - st.offset.y) > 0.2 ||
+        Math.abs(sl.target - sl.fraction) > 5e-4 || Math.abs(sl.velocity) > 5e-3 ||
+        Math.abs(sl.dragDelta) > 0.15 || Math.abs(pl.stretch) > 0.004 ||
+        Math.abs(pl.targetStretch) > 0.004;
+      if (needContinue || st.isPressed || sl.dragging) { st.rafId = requestAnimationFrame(self._tick); }
+      else { st.pressProgress = st.targetPress; st.offset.x = st.targetOffset.x;
+        st.offset.y = st.targetOffset.y; sl.fraction = sl.target; sl.velocity = 0;
+        sl.dragDelta = 0; pl.stretch = 0; pl.targetStretch = 0;
+        self._applyKnobTransform(); self._applyFill(); self._updateReadout();
+        st.rafId = null; }
+    };
+    this._start = function () { if (self.state.rafId == null) self.state.rafId = requestAnimationFrame(self._tick); };
+    this._bind();
+    var v0 = opts.value != null ? opts.value : self.MIN;
+    self.slider.fraction = self._valueToFraction(v0);
+    self.slider.target = self.slider.fraction;
+    self._applyKnobTransform(); self._applyFill(); self._updateReadout();
+    self.state.rafId = requestAnimationFrame(self._tick);
+  }
+  Slider.prototype._measure = function () {
+    this.SLIDER_W = safeMeasure(this.sliderEl, 300);
+    this.KNOB_W = safeMeasure(this.knob, 49);
+    this.TRAVEL = Math.max(1, this.SLIDER_W - this.KNOB_W);
+  };
+  Slider.prototype._valueToFraction = function (v) { return Math.max(0, Math.min(1, (v - this.MIN) / (this.MAX - this.MIN))); };
+  Slider.prototype._fractionToValue = function (f) { return Math.round(this.MIN + f * (this.MAX - this.MIN)); };
+  Slider.prototype.getValue = function () { return this._fractionToValue(this.slider.fraction); };
+  Slider.prototype.setValue = function (v) { this.slider.target = this._valueToFraction(v); this.slider.velocity = 0; this._start(); };
+  Slider.prototype._updateReadout = function () {
+    if (!this.readout) return;
+    var v = this._fractionToValue(this.slider.fraction);
+    this.readout.innerHTML = '<b>' + v + '</b>' + this.SUFFIX;
+    this.sliderEl.setAttribute('aria-valuenow', String(v));
+  };
+  Slider.prototype._applyFill = function () {
+    if (!this.fill) return;
+    var knobCenter = this.KNOB_W / 2 + this.slider.fraction * this.TRAVEL;
+    var pct = this.SLIDER_W > 0 ? (knobCenter / this.SLIDER_W) * 100 : 0;
+    if (this.slider.fraction <= 0.0005) pct = 0;
+    if (this.slider.fraction >= 0.9995) pct = 100;
+    this.fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  };
+  Slider.prototype._applyKnobTransform = function () {
+    if (!this.knob) return;
+    var w = this.KNOB_W, h = this.KNOB_H;
+    var minDim = Math.min(w, h);
+    var progress = this.state.pressProgress;
+    var baseScale = 1 + this.SCALE_GROW * progress;
+    var s = this.pill.stretch * progress; var absS = Math.abs(s);
+    var scaleX = baseScale + absS * this.PILL_STRETCH_X;
+    var scaleY = baseScale - absS * this.PILL_SQUASH_Y;
+    var originX = 50 + s * 30; var pivotShift = s * 3.0;
+    var maxOffset = minDim;
+    var tx = maxOffset * Math.tanh(0.05 * this.state.offset.x / maxOffset);
+    var ty = maxOffset * Math.tanh(this.DRAG_Y_FACTOR * this.state.offset.y / maxOffset);
+    var baseX = this.slider.fraction * this.TRAVEL;
+    var finalX = baseX + this.slider.dragDelta;
+    finalX = Math.max(0, Math.min(this.TRAVEL, finalX));
+    if (this.slider.fraction <= 0.0005) finalX = 0;
+    if (this.slider.fraction >= 0.9995) finalX = this.TRAVEL;
+    if (finalX <= 0) pivotShift = Math.max(0, pivotShift);
+    if (finalX >= this.TRAVEL) pivotShift = Math.min(0, pivotShift);
+    this.knob.style.transformOrigin = originX + '% 50%';
+    this.knob.style.transform = 'translate3d('+(finalX+pivotShift+tx)+'px,'+(ty-this.KNOB_H/2)+'px,0) scale('+scaleX+','+scaleY+')';
+    if (this.knobAmbient) {
+      this.knobAmbient.style.transform = 'translate3d('+(finalX+pivotShift)+'px,'+(-this.KNOB_H/2)+'px,0)';
+      this.knobAmbient.style.opacity = (0.85 + 0.15*progress).toFixed(3);
+    }
+    this.knob.style.setProperty('--lx', (50 + (this.state.offset.x/w)*100)+'%');
+    this.knob.style.setProperty('--ly', (50 + (this.state.offset.y/h)*100)+'%');
+  };
+  Slider.prototype._bind = function () {
+    var self = this; var sliderEl = this.sliderEl; var knob = this.knob;
+    var knobRectCache = null, sliderRectCache = null;
+    function updateOffset(e) {
+      var rect = knobRectCache || knob.getBoundingClientRect();
+      var p = getPoint(e);
+      var mx = rect.left + rect.width/2, my = rect.top + rect.height/2;
+      var maxOff = Math.max(rect.width, rect.height) * self.OFFSET_LIMIT;
+      var dx = p.x - mx, dy = p.y - my;
+      var len = Math.hypot(dx, dy);
+      if (len > maxOff && len > 0) { dx = dx/len*maxOff; dy = dy/len*maxOff; }
+      self.state.targetOffset.x = dx; self.state.targetOffset.y = dy;
+    }
+    function spawnRipple(e) {
+      var layer = knob.querySelector('.ripple-layer'); if (!layer) return;
+      var rect = knobRectCache || knob.getBoundingClientRect();
+      var p = getPoint(e);
+      var r = document.createElement('span'); r.className = 'ripple';
+      r.style.left = (p.x-rect.left)+'px'; r.style.top = (p.y-rect.top)+'px';
+      layer.appendChild(r);
+      setTimeout(function(){ if (r.parentNode) r.parentNode.removeChild(r); }, 600);
+    }
+    function clientXToFraction(clientX) {
+      var rect = sliderRectCache || sliderEl.getBoundingClientRect();
+      var x = clientX - rect.left - self.KNOB_W/2;
+      return Math.max(0, Math.min(1, x / self.TRAVEL));
+    }
+    var activePointerId = null, startPointerX = 0, startFraction = 0;
+    function onPointerDown(e) {
+      if (activePointerId !== null) return;
+      activePointerId = e.pointerId;
+      try { sliderEl.setPointerCapture(activePointerId); } catch(_) {}
+      knobRectCache = knob.getBoundingClientRect();
+      sliderRectCache = sliderEl.getBoundingClientRect();
+      self.state.isPressed = true; self.state.targetPress = 1;
+      knob.classList.add('is-active');
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch(_) {} }
+      updateOffset(e);
+      var onKnob = (e.target === knob || knob.contains(e.target));
+      if (onKnob) { spawnRipple(e); }
+      else { var f = clientXToFraction(e.clientX);
+        self.slider.target = f; self.slider.velocity = 0; self.slider.dragDelta = 0; }
+      startPointerX = e.clientX; startFraction = self.slider.fraction;
+      self.pill.lastPointerX = e.clientX; self.pill.lastTime = performance.now();
+      self.pill.lastSpeed = 0; self.pill.stretch = 0; self.pill.targetStretch = 0;
+      self.slider.dragging = true; self._start(); e.preventDefault();
+    }
+    function onPointerMove(e) {
+      if (e.pointerId !== activePointerId) return;
+      updateOffset(e);
+      var p = getPoint(e); var dx = p.x - startPointerX;
+      var f = startFraction + dx / self.TRAVEL; f = Math.max(0, Math.min(1, f));
+      self.slider.fraction = f; self.slider.target = f; self.slider.velocity = 0;
+      var desiredX = startFraction * self.TRAVEL + dx;
+      var allowedX = f * self.TRAVEL;
+      var d = desiredX - allowedX;
+      if (d > self.DRAG_X_LIMIT) d = self.DRAG_X_LIMIT;
+      if (d < -self.DRAG_X_LIMIT) d = -self.DRAG_X_LIMIT;
+      self.slider.dragDelta = d;
+      var now = performance.now(); var dtMs = now - self.pill.lastTime;
+      if (dtMs < 1) dtMs = 1;
+      var instDx = p.x - self.pill.lastPointerX;
+      var speed = (instDx / dtMs) * 1000;
+      self.pill.lastPointerX = p.x; self.pill.lastTime = now; self.pill.lastSpeed = speed;
+      var absSpeed = Math.abs(speed); var targetMagnitude = 0;
+      if (absSpeed > self.PILL_SPEED_DEAD) {
+        var t = (absSpeed - self.PILL_SPEED_DEAD) / (self.PILL_SPEED_MAX - self.PILL_SPEED_DEAD);
+        if (t > 1) t = 1;
+        targetMagnitude = Math.tanh(t * 2.4) / Math.tanh(2.4);
+      }
+      var dir = speed >= 0 ? 1 : -1;
+      var newTarget = dir * targetMagnitude;
+      self.pill.targetStretch = self.pill.targetStretch * 0.5 + newTarget * 0.5;
+      if (self.pill.targetStretch > 1) self.pill.targetStretch = 1;
+      if (self.pill.targetStretch < -1) self.pill.targetStretch = -1;
+      self._start(); e.preventDefault();
+    }
+    function onPointerUp(e) {
+      if (e.pointerId !== activePointerId) return;
+      try { sliderEl.releasePointerCapture(activePointerId); } catch(_) {}
+      activePointerId = null;
+      self.state.isPressed = false; self.state.targetPress = 0;
+      self.state.targetOffset.x = 0; self.state.targetOffset.y = 0;
+      knob.classList.remove('is-active');
+      self.slider.dragging = false;
+      var v = self._fractionToValue(self.slider.fraction);
+      self.slider.target = self._valueToFraction(v);
+      if (self.onChange) self.onChange(v, self);
+      self._start();
+    }
+    sliderEl.addEventListener('pointerdown', onPointerDown);
+    global.addEventListener('pointermove', onPointerMove, { passive:false });
+    global.addEventListener('pointerup', onPointerUp);
+    global.addEventListener('pointercancel', onPointerUp);
+    global.addEventListener('resize', function () { knobRectCache = null; sliderRectCache = null; });
+  };
+
+  function Tabs(rootEl, opts) {
+    opts = opts || {};
+    this.root = rootEl; this.knob = rootEl.querySelector('.knob');
+    this.onChange = opts.onChange || null;
+    if (!this.knob) return;
+    var self = this;
+    this.tabEls = Array.prototype.slice.call(rootEl.querySelectorAll('.tab'));
+    this.COUNT = this.tabEls.length;
+    if (this.COUNT === 0) return;
+    this.PAD = 5;
+    this.state = { pressProgress:0, targetPress:0,
+      offset:{x:0,y:0}, targetOffset:{x:0,y:0}, isPressed:false, rafId:null, glide:false };
+    this.tabs = { fraction:0, target:0, velocity:0, dragging:false, dragDelta:0 };
+    this.pill = { stretch:0, targetStretch:0, lastPointerX:0, lastTime:0, lastSpeed:0 };
+    this.SPRING = { k:720, c:36, m:1 };
+    this.KNOB_W = 0; this.KNOB_H = 0; this.CELL_W = 0; this.TRAVEL = 0;
+    this.DRAG_LIMIT = 0; this.SCALE_GROW = 0.42;
+    this.PILL_STRETCH_X = 0.35; this.PILL_SQUASH_Y = 0.16;
+    this.PILL_SPEED_DEAD = 320; this.PILL_SPEED_MAX = 1800;
+    this.PILL_DECAY = 0.955; this.PILL_FOLLOW = 16;
+    this._measure();
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { if (self._measure()) self._applyKnobTransform(); }).observe(rootEl);
+    } else {
+      global.addEventListener('resize', function () { self._measure(); self._applyKnobTransform(); });
+    }
+    this._bind();
+    var startIndex = opts.value != null ? opts.value : 0;
+    startIndex = Math.max(0, Math.min(this.COUNT - 1, startIndex));
+    this.tabs.fraction = startIndex; this.tabs.target = startIndex;
+    this._applyKnobTransform(); this._applyActive();
+    this._last = performance.now();
+    this._tick = function (now) {
+      var dt = Math.min((now - self._last) / 1000, 0.033); self._last = now;
+      var st = self.state, tb = self.tabs, pl = self.pill;
+      if (!tb.dragging) {
+        var dx = tb.fraction - tb.target;
+        var a = (-self.SPRING.k * dx - self.SPRING.c * tb.velocity) / self.SPRING.m;
+        tb.velocity += a * dt; tb.fraction += tb.velocity * dt;
+        if (Math.abs(tb.fraction - tb.target) < 1e-3 && Math.abs(tb.velocity) < 1e-3) {
+          tb.fraction = tb.target; tb.velocity = 0;
+        }
+        tb.dragDelta += (0 - tb.dragDelta) * Math.min(1, dt * 20);
+      }
+      var targetPress = st.targetPress;
+      if (st.glide && !st.isPressed) {
+        var remain = Math.abs(tb.target - tb.fraction); var vel = Math.abs(tb.velocity);
+        if (remain > 1e-3 || vel > 1e-3) { targetPress = 1.0; }
+        else { targetPress = 0;
+          if (st.pressProgress < 0.35) { st.glide = false; self.knob.classList.remove('is-active'); } }
+      }
+      var pressLerp;
+      if (targetPress > st.pressProgress) { pressLerp = 0.25; } else { pressLerp = 0.65; }
+      st.pressProgress += (targetPress - st.pressProgress) * pressLerp;
+      if (!st.isPressed && !tb.dragging && !st.glide &&
+          st.pressProgress < 0.15 && self.knob.classList.contains('is-active')) {
+        st.pressProgress = 0; self.knob.classList.remove('is-active');
+      }
+      st.offset.x += (st.targetOffset.x - st.offset.x) * 0.22;
+      st.offset.y += (st.targetOffset.y - st.offset.y) * 0.22;
+      pl.stretch += (pl.targetStretch - pl.stretch) * Math.min(1, dt * self.PILL_FOLLOW);
+      pl.targetStretch *= self.PILL_DECAY;
+      if (Math.abs(pl.targetStretch) < 0.004) pl.targetStretch = 0;
+      if (st.glide && !st.isPressed && Math.abs(tb.velocity) > 0.3) {
+        var dirS = tb.velocity >= 0 ? 1 : -1;
+        var mag = Math.min(1, Math.abs(tb.velocity) * 0.5);
+        pl.targetStretch = pl.targetStretch * 0.4 + dirS * mag * 0.6;
+      } else if (!st.glide && !tb.dragging && !st.isPressed) { pl.targetStretch *= 0.6; }
+      self._applyKnobTransform(); self._applyActive();
+      var needContinue =
+        Math.abs(targetPress - st.pressProgress) > 0.001 ||
+        Math.abs(st.targetOffset.x - st.offset.x) > 0.1 ||
+        Math.abs(st.targetOffset.y - st.offset.y) > 0.1 ||
+        Math.abs(tb.target - tb.fraction) > 1e-3 || Math.abs(tb.velocity) > 1e-3 ||
+        Math.abs(tb.dragDelta) > 0.1 || Math.abs(pl.stretch) > 0.004 ||
+        Math.abs(pl.targetStretch) > 0.004 || st.glide ||
+        (st.pressProgress > 0 && !st.isPressed && !tb.dragging);
+      if (needContinue || st.isPressed || tb.dragging) { st.rafId = requestAnimationFrame(self._tick); }
+      else { st.pressProgress = 0; st.offset.x = st.targetOffset.x;
+        st.offset.y = st.targetOffset.y; tb.fraction = tb.target;
+        tb.velocity = 0; tb.dragDelta = 0; pl.stretch = 0; pl.targetStretch = 0;
+        self._applyKnobTransform(); self._applyActive(); st.rafId = null; }
+    };
+    this._start = function () { if (self.state.rafId == null) self.state.rafId = requestAnimationFrame(self._tick); };
+    this.state.rafId = requestAnimationFrame(this._tick);
+  }
+  Tabs.prototype._measure = function () {
+    var rect = this.root.getBoundingClientRect();
+    if (rect.width < 1) return false;
+    this.CELL_W = (rect.width - this.PAD * 2) / this.COUNT;
+    this.KNOB_W = this.CELL_W;
+    this.KNOB_H = rect.height - this.PAD * 2;
+    this.TRAVEL = this.KNOB_W * (this.COUNT - 1);
+    if (!this.root.classList.contains('upgrade-mode-tabs')) {
+      this.knob.style.height = this.KNOB_H + 'px';
+      this.knob.style.borderRadius = (this.KNOB_H / 2) + 'px';
+    }
+    this.knob.style.width = this.KNOB_W + 'px';
+    var self = this;
+    this.tabEls.forEach(function (t, i) {
+      t.style.left = (self.PAD + i * self.CELL_W) + 'px';
+      t.style.width = self.CELL_W + 'px';
+    });
+    return true;
+  };
+  Tabs.prototype._applyKnobTransform = function () {
+    var w = this.KNOB_W, h = this.KNOB_H;
+    var minDim = Math.min(w, h) || 1;
+    var progress = this.state.pressProgress;
+    var baseScale = 1 + this.SCALE_GROW * progress;
+    var s = this.pill.stretch * progress; var absS = Math.abs(s);
+    var scaleX = baseScale + absS * this.PILL_STRETCH_X;
+    var scaleY = baseScale - absS * this.PILL_SQUASH_Y;
+    var originX = 50 + s * 30;
+    var maxOffset = minDim;
+    var tx = maxOffset * Math.tanh(0.05 * this.state.offset.x / maxOffset);
+    var ty = maxOffset * Math.tanh(0.05 * this.state.offset.y / maxOffset);
+    var baseX = this.tabs.fraction * this.CELL_W;
+    var finalX = baseX + this.tabs.dragDelta;
+    var minX = -this.DRAG_LIMIT, maxX = this.TRAVEL + this.DRAG_LIMIT;
+    if (finalX < minX) finalX = minX;
+    if (finalX > maxX) finalX = maxX;
+    this.knob.style.transformOrigin = originX + '% 50%';
+    this.knob.style.transform = 'translate3d('+(finalX+tx)+'px,'+ty+'px,0) scale('+scaleX+','+scaleY+')';
+    this.knob.style.setProperty('--lx', (50 + (this.state.offset.x/(w||1))*100)+'%');
+    this.knob.style.setProperty('--ly', (50 + (this.state.offset.y/(h||1))*100)+'%');
+  };
+  Tabs.prototype._applyActive = function () {
+    var idx = Math.round(this.tabs.fraction);
+    idx = Math.max(0, Math.min(this.COUNT - 1, idx));
+    for (var i = 0; i < this.COUNT; i++) {
+      this.tabEls[i].classList.toggle('active', i === idx);
+    }
+  };
+  Tabs.prototype._getPoint = function (e) {
+    if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  };
+  Tabs.prototype._updateOffset = function (e) {
+    var rect = this.knob.getBoundingClientRect();
+    var p = this._getPoint(e);
+    var mx = rect.left + rect.width/2, my = rect.top + rect.height/2;
+    var maxOff = Math.max(rect.width, rect.height) * 0.6;
+    var dx = p.x - mx, dy = p.y - my;
+    var len = Math.hypot(dx, dy);
+    if (len > maxOff) { dx = dx/len*maxOff; dy = dy/len*maxOff; }
+    this.state.targetOffset.x = dx; this.state.targetOffset.y = dy;
+  };
+  Tabs.prototype._spawnRipple = function (e) {
+    var layer = this.knob.querySelector('.ripple-layer'); if (!layer) return;
+    var rect = this.knob.getBoundingClientRect(); var p = this._getPoint(e);
+    var r = document.createElement('span'); r.className = 'ripple';
+    r.style.left = (p.x-rect.left)+'px'; r.style.top = (p.y-rect.top)+'px';
+    layer.appendChild(r); setTimeout(function(){ if (r.parentNode) r.remove(); }, 600);
+  };
+  Tabs.prototype._indexFromClientX = function (clientX) {
+    var rect = this.root.getBoundingClientRect();
+    var x = clientX - rect.left - this.PAD;
+    var idx = Math.floor(x / this.CELL_W);
+    if (idx < 0) idx = 0;
+    if (idx >= this.COUNT) idx = this.COUNT - 1;
+    return idx;
+  };
+  Tabs.prototype._bind = function () {
+    var self = this;
+    var pid = null, startX = 0, startF = 0, moved = false;
+    function onDown(e, isKnob) {
+      if (pid !== null) return;
+      pid = e.pointerId;
+      try { self.root.setPointerCapture(pid); } catch(_) {}
+      self.state.isPressed = true; self.state.targetPress = 1;
+      self.knob.classList.add('is-active');
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch(_) {} }
+      self._updateOffset(e); self._spawnRipple(e);
+      self.tabs.dragging = true; self.tabs.velocity = 0; self.tabs.dragDelta = 0;
+      startX = e.clientX; startF = self.tabs.fraction; moved = false;
+      self.state.glide = !isKnob;
+      self.pill.lastPointerX = e.clientX; self.pill.lastTime = performance.now();
+      self.pill.lastSpeed = 0; self.pill.stretch = 0; self.pill.targetStretch = 0;
+      self._start(); e.preventDefault();
+    }
+    this.root.addEventListener('pointerdown', function (e) {
+      var isKnob = (e.target === self.knob || self.knob.contains(e.target));
+      onDown(e, isKnob);
+    });
+    function onMove(e) {
+      if (e.pointerId !== pid) return;
+      self._updateOffset(e);
+      var p = self._getPoint(e); var dx = p.x - startX;
+      if (Math.abs(dx) > 2) moved = true;
+      if (moved) self.state.glide = false;
+      var f = startF + dx / self.CELL_W;
+      f = Math.max(0, Math.min(self.COUNT - 1, f));
+      self.tabs.fraction = f; self.tabs.target = f;
+      self.tabs.velocity = 0; self.tabs.dragDelta = 0;
+      var now = performance.now(); var dtMs = now - self.pill.lastTime;
+      if (dtMs < 1) dtMs = 1;
+      var instDx = p.x - self.pill.lastPointerX;
+      var speed = (instDx / dtMs) * 1000;
+      self.pill.lastPointerX = p.x; self.pill.lastTime = now; self.pill.lastSpeed = speed;
+      var absSpeed = Math.abs(speed); var targetMagnitude = 0;
+      if (absSpeed > self.PILL_SPEED_DEAD) {
+        var t = (absSpeed - self.PILL_SPEED_DEAD) / (self.PILL_SPEED_MAX - self.PILL_SPEED_DEAD);
+        if (t > 1) t = 1;
+        targetMagnitude = Math.tanh(t * 2.4) / Math.tanh(2.4);
+      }
+      var dir = speed >= 0 ? 1 : -1;
+      var newTarget = dir * targetMagnitude;
+      self.pill.targetStretch = self.pill.targetStretch * 0.5 + newTarget * 0.5;
+      if (self.pill.targetStretch > 1) self.pill.targetStretch = 1;
+      if (self.pill.targetStretch < -1) self.pill.targetStretch = -1;
+      self._start(); e.preventDefault();
+    }
+    function finish(e) {
+      if (e.pointerId !== pid) return;
+      try { self.root.releasePointerCapture(pid); } catch(_) {}
+      pid = null;
+      self.state.isPressed = false; self.state.targetPress = 0;
+      self.state.targetOffset.x = 0; self.state.targetOffset.y = 0;
+      self.tabs.dragging = false;
+      if (moved) { self.tabs.target = Math.max(0, Math.min(self.COUNT-1, Math.round(self.tabs.fraction)));
+        self.state.glide = false; }
+      else { var idx = self._indexFromClientX(e.clientX);
+        self.tabs.target = idx; self.state.glide = true; }
+      if (self.onChange) self.onChange(self.tabs.target, self);
+      self._start();
+    }
+    global.addEventListener('pointermove', onMove, { passive:false });
+    global.addEventListener('pointerup', finish);
+    global.addEventListener('pointercancel', finish);
+  };
+  Tabs.prototype.setValue = function (idx) {
+    idx = Math.max(0, Math.min(this.COUNT - 1, idx));
+    this.tabs.target = idx; this.state.glide = true;
+    this._start();
+    if (this.onChange) this.onChange(idx, this);
+  };
+  Tabs.prototype.getValue = function () { return Math.round(this.tabs.fraction); };
+  Tabs.prototype.remeasure = function () {
+    var ok = this._measure();
+    if (ok) this._applyKnobTransform();
+    return ok;
+  };
+
+  var LiquidGlass = {
+    Pill: Pill, Toggle: Toggle, Slider: Slider, Tabs: Tabs,
+    init: function (root) {
+      root = root || document;
+      var out = { pills: [], toggles: [], sliders: [], tabs: [] };
+      root.querySelectorAll('[data-lg-pill]').forEach(function (el) { out.pills.push(new Pill(el, {})); });
+      root.querySelectorAll('[data-lg-toggle]').forEach(function (el) { out.toggles.push(new Toggle(el, {})); });
+      root.querySelectorAll('[data-lg-slider]').forEach(function (el) {
+        out.sliders.push(new Slider(el, { wrap: el.closest('.slider-wrap') || el.parentElement }));
+      });
+      root.querySelectorAll('[data-lg-tabs]').forEach(function (el) { out.tabs.push(new Tabs(el, {})); });
+      return out;
+    }
+  };
+  global.LiquidGlass = LiquidGlass;
+})(window);
+
+/* ============================================================ УТИЛИТЫ */
+function showToast(text) {
+  var t = document.getElementById('toast');
+  t.textContent = text; t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function () { t.classList.remove('show'); }, 1800);
+}
+function fmt(n) { return n.toLocaleString('ru-RU') + ' ₽'; }
+
+/* ============================================================ СОСТОЯНИЕ */
+var GAME_STATE = { balance: 1000, inventory: [], totalSpent: 0, totalEarned: 0 };
+function saveState() { try { localStorage.setItem('lg_state', JSON.stringify(GAME_STATE)); } catch(_) {} }
+function loadState() {
+  try {
+    var s = localStorage.getItem('lg_state');
+    if (s) { var o = JSON.parse(s); Object.assign(GAME_STATE, o); }
+  } catch(_) {}
+}
+loadState();
+function updateAllBalances() {
+  var el = document.getElementById('caseBalance');
+  if (el) el.textContent = GAME_STATE.balance;
+  var pb = document.getElementById('profileBalance');
+  if (pb) pb.textContent = GAME_STATE.balance;
+  var pi = document.getElementById('profileItems');
+  if (pi) pi.textContent = GAME_STATE.inventory.length;
+}
+
+/* ============================================================ ПЕРЕКЛЮЧАТЕЛЬ ПРИЛОЖЕНИЙ */
+(function () {
+  new LiquidGlass.Tabs(document.getElementById('appTabs'), {
+    value: 0,
+    onChange: function (idx) {
+      ['app-cases','app-upgrade','app-profile'].forEach(function (id, i) {
+        document.getElementById(id).classList.toggle('active', i === idx);
+      });
+      if (idx === 2 && window.refreshProfile) {
+        requestAnimationFrame(window.refreshProfile);
+        setTimeout(window.refreshProfile, 80);
+      }
+      if (idx === 1 && window.refreshUpgrade) {
+        requestAnimationFrame(window.refreshUpgrade);
+        setTimeout(window.refreshUpgrade, 0);
+        setTimeout(window.refreshUpgrade, 80);
+        setTimeout(window.refreshUpgrade, 250);
+      }
+    }
+  });
+})();
+
+/* ============================================================
+ * APP 1 — КЕЙСЫ
+ * ============================================================ */
+(function () {
+  var RARITIES = {
+    common:    { color:'#8e8e93', glow:'rgba(142,142,147,0.5)',  name:'COMMON' },
+    uncommon:  { color:'#30d158', glow:'rgba(48,209,88,0.6)',    name:'UNCOMMON' },
+    rare:      { color:'#0a84ff', glow:'rgba(10,132,255,0.7)',   name:'RARE' },
+    epic:      { color:'#bf5af2', glow:'rgba(191,90,242,0.7)',   name:'EPIC' },
+    legendary: { color:'#ff9f0a', glow:'rgba(255,159,10,0.8)',   name:'LEGENDARY' },
+    mythic:    { color:'#ff375f', glow:'rgba(255,55,95,0.85)',   name:'MYTHIC' }
+  };
+  var ALL_ITEMS = [
+    { id:'s1', emoji:'🔩', name:'Гайка',       rarity:'common',    price:15 },
+    { id:'s2', emoji:'🧵', name:'Нитка',       rarity:'common',    price:20 },
+    { id:'s3', emoji:'🍪', name:'Печенье',     rarity:'common',    price:25 },
+    { id:'s4', emoji:'🔋', name:'Батарейка',   rarity:'uncommon',  price:60 },
+    { id:'s5', emoji:'🎧', name:'Наушники',    rarity:'uncommon',  price:80 },
+    { id:'s6', emoji:'🕶️', name:'Очки',        rarity:'uncommon',  price:95 },
+    { id:'s7', emoji:'📱', name:'Смартфон',    rarity:'rare',      price:250 },
+    { id:'s8', emoji:'💎', name:'Алмаз',       rarity:'rare',      price:320 },
+    { id:'s9', emoji:'⌚', name:'Часы',        rarity:'rare',      price:400 },
+    { id:'s10',emoji:'🏆', name:'Кубок',       rarity:'epic',      price:850 },
+    { id:'s11',emoji:'💍', name:'Кольцо',      rarity:'epic',      price:1100 },
+    { id:'s12',emoji:'🪄', name:'Жезл',        rarity:'epic',      price:1400 },
+    { id:'s13',emoji:'👑', name:'Корона',      rarity:'legendary', price:3500 },
+    { id:'s14',emoji:'🚀', name:'Ракета',      rarity:'legendary', price:5000 },
+    { id:'s15',emoji:'🐉', name:'Дракон',      rarity:'mythic',    price:12000 }
+  ];
+  var CASES = [
+    { id:'starter', emoji:'📦', name:'Стартовый', price:100, glow:'rgba(142,142,147,0.5)',
+      pool:[{ item:'s1', weight:35 },{ item:'s2', weight:25 },{ item:'s3', weight:20 },
+        { item:'s4', weight:12 },{ item:'s5', weight:6 },{ item:'s7', weight:1.5 },
+        { item:'s10', weight:0.5 }] },
+    { id:'rare', emoji:'🎁', name:'Редкий', price:500, glow:'rgba(10,132,255,0.7)',
+      pool:[{ item:'s4', weight:30 },{ item:'s5', weight:25 },{ item:'s6', weight:20 },
+        { item:'s7', weight:12 },{ item:'s8', weight:7 },{ item:'s9', weight:4 },
+        { item:'s10', weight:1.5 },{ item:'s13', weight:0.5 }] },
+    { id:'legend', emoji:'💎', name:'Легенда', price:2000, glow:'rgba(255,159,10,0.8)',
+      pool:[{ item:'s7', weight:25 },{ item:'s8', weight:22 },{ item:'s9', weight:20 },
+        { item:'s10', weight:14 },{ item:'s11', weight:9 },{ item:'s12', weight:6 },
+        { item:'s13', weight:3 },{ item:'s14', weight:0.8 },{ item:'s15', weight:0.2 }] }
+  ];
+  var selectedCase = CASES[0];
+  var spinning = false;
+  var balanceEl = document.getElementById('caseBalance');
+  var pickerEl = document.getElementById('casePicker');
+  var stripEl = document.getElementById('rouletteStrip');
+  var openBtn = document.getElementById('openCaseBtn');
+  var openLabel = document.getElementById('openCaseLabel');
+  var invEl = document.getElementById('inventory');
+  var invCountEl = document.getElementById('invCount');
+  var modalEl = document.getElementById('resultModal');
+  var modalInner = document.getElementById('resultInner');
+  var rmEmoji = document.getElementById('rmEmoji');
+  var rmName = document.getElementById('rmName');
+  var rmRarity = document.getElementById('rmRarity');
+
+  function getItem(id) { return ALL_ITEMS.find(function (i) { return i.id === id; }); }
+  function rarityOf(item) { return RARITIES[item.rarity]; }
+  function pickWeighted(pool) {
+    var total = 0;
+    pool.forEach(function (p) { total += p.weight; });
+    var r = Math.random() * total;
+    for (var i = 0; i < pool.length; i++) {
+      r -= pool[i].weight;
+      if (r <= 0) return pool[i].item;
+    }
+    return pool[pool.length - 1].item;
+  }
+  function buildStrip(winnerId) {
+    stripEl.innerHTML = '';
+    var items = [];
+    for (var i = 0; i < 60; i++) items.push(pickWeighted(selectedCase.pool));
+    items.push(winnerId);
+    for (var j = 0; j < 12; j++) items.push(pickWeighted(selectedCase.pool));
+    items.forEach(function (id) {
+      var it = getItem(id);
+      var r = rarityOf(it);
+      var el = document.createElement('div');
+      el.className = 'roulette-item';
+      el.style.setProperty('--item-color', r.color);
+      el.style.setProperty('--item-glow', r.glow);
+      el.style.background = 'radial-gradient(circle at 50% 30%, ' + r.color + '40 0%, rgba(0,0,0,0.5) 100%)';
+      el.innerHTML = '<span class="ri-emoji">' + it.emoji + '</span>' +
+                     '<span class="ri-name">' + it.name + '</span>';
+      stripEl.appendChild(el);
+    });
+  }
+  function spinToWinner() {
+    var wrapW = stripEl.parentElement.offsetWidth;
+    var itemW = 96, gap = 8, step = itemW + gap;
+    var winnerIndex = 60;
+    var itemCenter = 8 + winnerIndex * step + itemW / 2;
+    var targetX = wrapW / 2 - itemCenter;
+    var jitter = (Math.random() - 0.5) * 40;
+    targetX += jitter;
+    stripEl.style.transition = 'none';
+    stripEl.style.transform = 'translate3d(0px, -50%, 0)';
+    void stripEl.offsetWidth;
+    stripEl.style.transition = 'transform 4.2s cubic-bezier(0.12, 0.8, 0.2, 1)';
+    stripEl.style.transform = 'translate3d(' + targetX + 'px, -50%, 0)';
+  }
+  function resetStripPosition() {
+    stripEl.style.transition = 'none';
+    stripEl.style.transform = 'translate3d(0px, -50%, 0)';
+    void stripEl.offsetWidth;
+    stripEl.style.transition = '';
+  }
+  function renderPicker() {
+    pickerEl.innerHTML = '';
+    CASES.forEach(function (c) {
+      var btn = document.createElement('button');
+      btn.className = 'case-card' + (c.id === selectedCase.id ? ' active' : '');
+      btn.style.setProperty('--case-glow', c.glow);
+      btn.innerHTML = '<span class="cc-emoji">' + c.emoji + '</span>' +
+                      '<span class="cc-name">' + c.name + '</span>' +
+                      '<span class="cc-price">' + c.price + ' ₽</span>';
+      btn.addEventListener('click', function () {
+        if (spinning) return;
+        selectedCase = c;
+        renderPicker();
+        openLabel.textContent = 'Открыть · ' + c.price + ' ₽';
+        buildStrip(pickWeighted(c.pool));
+        resetStripPosition();
+      });
+      pickerEl.appendChild(btn);
+    });
+  }
+  function updateBalance() {
+    balanceEl.textContent = GAME_STATE.balance;
+    updateAllBalances();
+  }
+  function updateInventory() {
+    invEl.innerHTML = '';
+    GAME_STATE.inventory.slice().reverse().forEach(function (itemId) {
+      var it = getItem(itemId); if (!it) return;
+      var r = rarityOf(it);
+      var slot = document.createElement('div');
+      slot.className = 'inv-slot';
+      slot.style.setProperty('--item-color', r.color);
+      slot.title = it.name + ' · ' + r.name;
+      slot.textContent = it.emoji;
+      invEl.appendChild(slot);
+    });
+    invCountEl.textContent = GAME_STATE.inventory.length;
+  }
+  function openCase() {
+    if (spinning) return;
+    if (GAME_STATE.balance < selectedCase.price) {
+      showToast('❌ Недостаточно средств'); return;
+    }
+    GAME_STATE.balance -= selectedCase.price;
+    GAME_STATE.totalSpent += selectedCase.price;
+    updateBalance(); saveState();
+    spinning = true; openBtn.disabled = true;
+    var winnerId = pickWeighted(selectedCase.pool);
+    buildStrip(winnerId);
+    requestAnimationFrame(function () { spinToWinner(); });
+    if (navigator.vibrate) { try { navigator.vibrate([10, 30, 10, 30, 10]); } catch(_) {} }
+    setTimeout(function () {
+      spinning = false; openBtn.disabled = false;
+      var winner = getItem(winnerId); var r = rarityOf(winner);
+      GAME_STATE.inventory.push(winnerId);
+      GAME_STATE.totalEarned += winner.price;
+      updateInventory(); updateAllBalances(); saveState();
+      modalInner.style.setProperty('--result-color', r.color);
+      modalInner.style.setProperty('--result-glow', r.glow);
+      rmEmoji.textContent = winner.emoji;
+      rmName.textContent = winner.name;
+      rmRarity.textContent = r.name;
+      rmRarity.style.color = r.color;
+      modalEl.classList.add('show');
+      if (navigator.vibrate) { try { navigator.vibrate([20,40,20]); } catch(_) {} }
+    }, 4400);
+  }
+  openBtn.addEventListener('click', openCase);
+  document.getElementById('rmClose').addEventListener('click', function () {
+    modalEl.classList.remove('show');
+  });
+  renderPicker(); updateBalance();
+  buildStrip(pickWeighted(selectedCase.pool));
+  resetStripPosition();
+  openLabel.textContent = 'Открыть · ' + selectedCase.price + ' ₽';
+  updateInventory();
+  new LiquidGlass.Pill(openBtn, {});
+})();
+
+/* ============================================================
+ * APP 2 — АПГРЕЙДЕР
+ * ============================================================ */
+(function () {
+  var ITEMS_DB = {
+    's1':  { emoji:'🔩', name:'Гайка',       rarity:'COMMON',    color:'#8e8e93', glow:'rgba(142,142,147,0.4)', price:15 },
+    's2':  { emoji:'🧵', name:'Нитка',       rarity:'COMMON',    color:'#8e8e93', glow:'rgba(142,142,147,0.4)', price:20 },
+    's3':  { emoji:'🍪', name:'Печенье',     rarity:'COMMON',    color:'#8e8e93', glow:'rgba(142,142,147,0.4)', price:25 },
+    's4':  { emoji:'🔋', name:'Батарейка',   rarity:'UNCOMMON',  color:'#30d158', glow:'rgba(48,209,88,0.5)',   price:60 },
+    's5':  { emoji:'🎧', name:'Наушники',    rarity:'UNCOMMON',  color:'#30d158', glow:'rgba(48,209,88,0.5)',   price:80 },
+    's6':  { emoji:'🕶️', name:'Очки',        rarity:'UNCOMMON',  color:'#30d158', glow:'rgba(48,209,88,0.5)',   price:95 },
+    's7':  { emoji:'📱', name:'Смартфон',    rarity:'RARE',      color:'#0a84ff', glow:'rgba(10,132,255,0.6)',  price:250 },
+    's8':  { emoji:'💎', name:'Алмаз',       rarity:'RARE',      color:'#0a84ff', glow:'rgba(10,132,255,0.6)',  price:320 },
+    's9':  { emoji:'⌚', name:'Часы',        rarity:'RARE',      color:'#0a84ff', glow:'rgba(10,132,255,0.6)',  price:400 },
+    's10': { emoji:'🏆', name:'Кубок',       rarity:'EPIC',      color:'#bf5af2', glow:'rgba(191,90,242,0.65)', price:850 },
+    's11': { emoji:'💍', name:'Кольцо',      rarity:'EPIC',      color:'#bf5af2', glow:'rgba(191,90,242,0.65)', price:1100 },
+    's12': { emoji:'🪄', name:'Жезл',        rarity:'EPIC',      color:'#bf5af2', glow:'rgba(191,90,242,0.65)', price:1400 },
+    's13': { emoji:'👑', name:'Корона',      rarity:'LEGENDARY', color:'#ff9f0a', glow:'rgba(255,159,10,0.75)', price:3500 },
+    's14': { emoji:'🚀', name:'Ракета',      rarity:'LEGENDARY', color:'#ff9f0a', glow:'rgba(255,159,10,0.75)', price:5000 },
+    's15': { emoji:'🐉', name:'Дракон',      rarity:'MYTHIC',    color:'#ff375f', glow:'rgba(255,55,95,0.85)',  price:12000 }
+  };
+
+  var classicContent = document.getElementById('classicContent');
+  var wheelContent = document.getElementById('wheelContent');
+
+  classicContent.innerHTML =
+    '<div id="classicEmpty" class="upgrade-empty" style="display:none;">' +
+      '<div class="ue-emoji">📦</div>' +
+      '<div class="ue-text">Инвентарь пуст.<br>Открой кейс, чтобы получить предметы для апгрейда.</div>' +
+    '</div>' +
+    '<div id="classicBody" style="display:flex;flex-direction:column;gap:14px;width:100%;">' +
+      '<div class="upgrade-item" id="upgradeItem">' +
+        '<div class="ui-emoji" id="uiEmoji">💎</div>' +
+        '<div class="ui-info">' +
+          '<span class="ui-name" id="uiName">Алмаз</span>' +
+          '<span class="ui-rarity" id="uiRarity">RARE</span>' +
+          '<span class="ui-price" id="uiPrice">250 ₽</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="upgrade-bet-wrap">' +
+        '<div class="upgrade-bet-head">' +
+          '<span class="ub-label">Ставка</span>' +
+          '<span class="ub-value" id="classicBetValue">10 ₽</span>' +
+        '</div>' +
+        '<div class="slider-wrap">' +
+          '<div class="slider" id="classicBetSlider" tabindex="0" role="slider" data-lg-slider>' +
+            '<div class="track"><div class="fill"></div></div>' +
+            '<div class="knob-ambient"></div>' +
+            '<div class="knob">' +
+              '<span class="gloss"></span><span class="top-glow"></span>' +
+              '<span class="lens"></span><span class="inner-shadow"></span>' +
+              '<span class="ripple-layer"></span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="value-readout" style="display:none;"></div>' +
+        '</div>' +
+        '<div class="upgrade-bet-hint">Больше ставка — выше шанс</div>' +
+      '</div>' +
+      '<div class="chance-bar-wrap">' +
+        '<div class="chance-bar">' +
+          '<div class="chance-seg win-seg" id="winSeg" style="width:50%;">50%</div>' +
+          '<div class="chance-seg lose-seg" id="loseSeg" style="width:50%;">50%</div>' +
+        '</div>' +
+        '<div class="upgrade-meta">' +
+          '<span class="um-label">Цель: <span class="um-value" id="targetPrice">500 ₽</span></span>' +
+          '<span class="um-label">Множитель: <span class="um-value" id="multiplier">×2.0</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="lg-pill" id="upgradeBtn" style="width:100%;" type="button" data-lg-pill>' +
+        '<span class="lens"></span><span class="inner-shadow"></span>' +
+        '<span class="ripple-layer"></span>' +
+        '<span class="content">' +
+          '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>' +
+          '</svg>' +
+          '<span class="label" id="upgLabel">Апгрейд</span>' +
+        '</span>' +
+      '</button>' +
+      '<div class="upgrade-history" id="upgradeHistory">' +
+        '<div style="font-size:10px;color:rgba(255,255,255,0.35);padding:6px 4px;">История появится здесь</div>' +
+      '</div>' +
+    '</div>';
+
+  wheelContent.innerHTML =
+    '<div id="wheelEmpty" class="upgrade-empty" style="display:none;">' +
+      '<div class="ue-emoji">📦</div>' +
+      '<div class="ue-text">Инвентарь пуст.<br>Открой кейс, чтобы получить предметы для кручения.</div>' +
+    '</div>' +
+    '<div id="wheelBody" style="display:flex;flex-direction:column;gap:14px;width:100%;align-items:center;">' +
+      '<div class="roulette-up-wrap">' +
+        '<svg class="roulette-up-svg" id="wheelSvg" viewBox="0 0 200 200"></svg>' +
+        '<div class="roulette-up-arrow" id="wheelArrow"></div>' +
+        '<div class="roulette-up-center" id="wheelCenter">' +
+          '<span class="ruc-emoji" id="wheelEmoji">💎</span>' +
+          '<span class="ruc-label" id="wheelLabel">START</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="upgrade-bet-wrap">' +
+        '<div class="upgrade-bet-head">' +
+          '<span class="ub-label">Ставка</span>' +
+          '<span class="ub-value" id="wheelBetValue">10 ₽</span>' +
+        '</div>' +
+        '<div class="slider-wrap">' +
+          '<div class="slider" id="wheelBetSlider" tabindex="0" role="slider" data-lg-slider>' +
+            '<div class="track"><div class="fill"></div></div>' +
+            '<div class="knob-ambient"></div>' +
+            '<div class="knob">' +
+              '<span class="gloss"></span><span class="top-glow"></span>' +
+              '<span class="lens"></span><span class="inner-shadow"></span>' +
+              '<span class="ripple-layer"></span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="value-readout" style="display:none;"></div>' +
+        '</div>' +
+        '<div class="upgrade-bet-hint">Больше ставка — выше шанс</div>' +
+      '</div>' +
+      '<div class="chance-bar-wrap">' +
+        '<div class="chance-bar">' +
+          '<div class="chance-seg win-seg" id="wheelWinSeg" style="width:50%;">50%</div>' +
+          '<div class="chance-seg lose-seg" id="wheelLoseSeg" style="width:50%;">50%</div>' +
+        '</div>' +
+        '<div class="upgrade-meta">' +
+          '<span class="um-label">Выигрыш: <span class="um-value" id="wheelWinAmount">500 ₽</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="lg-pill" id="wheelSpinBtn" style="width:100%;" type="button" data-lg-pill>' +
+        '<span class="lens"></span><span class="inner-shadow"></span>' +
+        '<span class="ripple-layer"></span>' +
+        '<span class="content">' +
+          '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' +
+          '</svg>' +
+          '<span class="label">Крутить</span>' +
+        '</span>' +
+      '</button>' +
+      '<div class="upgrade-history" id="wheelHistory">' +
+        '<div style="font-size:10px;color:rgba(255,255,255,0.35);padding:6px 4px;">История появится здесь</div>' +
+      '</div>' +
+    '</div>';
+
+  var currentItem = null;
+  var running = false;
+  var classicBet = 10;
+  var classicSlider = null;
+
+  var itemEl = document.getElementById('upgradeItem');
+  var uiEmoji = document.getElementById('uiEmoji');
+  var uiName = document.getElementById('uiName');
+  var uiRarity = document.getElementById('uiRarity');
+  var uiPrice = document.getElementById('uiPrice');
+  var winSeg = document.getElementById('winSeg');
+  var loseSeg = document.getElementById('loseSeg');
+  var targetPrice = document.getElementById('targetPrice');
+  var multiplierEl = document.getElementById('multiplier');
+  var upgradeBtn = document.getElementById('upgradeBtn');
+  var upgLabel = document.getElementById('upgLabel');
+  var histEl = document.getElementById('upgradeHistory');
+  var classicBody = document.getElementById('classicBody');
+  var classicEmpty = document.getElementById('classicEmpty');
+  var classicBetValue = document.getElementById('classicBetValue');
+
+  function pickFirstItem() {
+    if (GAME_STATE.inventory.length === 0) return null;
+    var inv = GAME_STATE.inventory.slice();
+    inv.sort(function (a, b) {
+      var pa = ITEMS_DB[a] ? ITEMS_DB[a].price : 0;
+      var pb = ITEMS_DB[b] ? ITEMS_DB[b].price : 0;
+      return pb - pa;
+    });
+    return inv[0];
+  }
+
+  function getChance(bet, itemPrice) {
+    if (!itemPrice || itemPrice <= 0) return 0.5;
+    var ratio = bet / itemPrice;
+    var chance = 0.5 + ratio * 0.35;
+    if (chance > 0.95) chance = 0.95;
+    if (chance < 0.05) chance = 0.05;
+    return chance;
+  }
+
+  function renderClassic() {
+    var hasItems = GAME_STATE.inventory.length > 0;
+    classicBody.style.display = hasItems ? 'flex' : 'none';
+    classicEmpty.style.display = hasItems ? 'none' : 'flex';
+    if (!hasItems) return;
+
+    if (!currentItem || GAME_STATE.inventory.indexOf(currentItem) === -1) {
+      currentItem = pickFirstItem();
+    }
+    var item = ITEMS_DB[currentItem];
+    if (!item) { currentItem = pickFirstItem(); item = ITEMS_DB[currentItem]; }
+
+    itemEl.style.setProperty('--item-color', item.color);
+    itemEl.style.setProperty('--item-glow', item.glow);
+    uiEmoji.textContent = item.emoji;
+    uiName.textContent = item.name;
+    uiRarity.textContent = item.rarity;
+    uiRarity.style.color = item.color;
+    uiPrice.textContent = fmt(item.price);
+
+    if (classicSlider) {
+      classicSlider.MAX = Math.max(item.price, GAME_STATE.balance || 1);
+      classicSlider.setValue(Math.min(classicBet, classicSlider.MAX));
+    } else {
+      classicSlider = new LiquidGlass.Slider(document.getElementById('classicBetSlider'), {
+        min: 1, max: Math.max(item.price, GAME_STATE.balance || 1), value: classicBet,
+        wrap: document.getElementById('classicBetSlider').closest('.slider-wrap'),
+        onChange: function (v) {
+          classicBet = v;
+          classicBetValue.textContent = fmt(v);
+          updateClassicChance();
+        }
+      });
+    }
+    classicBetValue.textContent = fmt(classicBet);
+    updateClassicChance();
+  }
+
+  function updateClassicChance() {
+    var item = ITEMS_DB[currentItem];
+    if (!item) return;
+    var chance = getChance(classicBet, item.price);
+    winSeg.style.width = (chance * 100) + '%';
+    loseSeg.style.width = ((1 - chance) * 100) + '%';
+    winSeg.textContent = Math.round(chance * 100) + '%';
+    loseSeg.textContent = Math.round((1 - chance) * 100) + '%';
+    var mult = 1 / chance;
+    targetPrice.textContent = fmt(Math.round(classicBet / chance));
+    multiplierEl.textContent = '×' + mult.toFixed(2);
+    upgLabel.textContent = 'Апгрейд · ' + fmt(classicBet);
+  }
+
+  function addClassicHistory(win, amount) {
+    var chip = document.createElement('div');
+    chip.className = 'history-chip ' + (win ? 'win' : 'lose');
+    chip.textContent = (win ? '↑ +' : '↓ -') + fmt(amount);
+    if (histEl.children.length === 1 && histEl.children[0].tagName === 'DIV' &&
+        histEl.children[0].style.fontSize === '10px') histEl.innerHTML = '';
+    histEl.appendChild(chip);
+    while (histEl.children.length > 12) histEl.removeChild(histEl.firstChild);
+  }
+
+  function doClassicUpgrade() {
+    if (running) return;
+    var item = ITEMS_DB[currentItem];
+    if (!item) { showToast('❌ Нет предмета'); return; }
+    var invIdx = GAME_STATE.inventory.indexOf(currentItem);
+    if (invIdx === -1) { showToast('❌ Предмет не найден'); renderClassic(); return; }
+    if (GAME_STATE.balance < classicBet) { showToast('❌ Недостаточно средств на ставку'); return; }
+
+    running = true;
+    var chance = getChance(classicBet, item.price);
+    var win = Math.random() < chance;
+
+    itemEl.classList.add(win ? 'win' : 'lose');
+    if (navigator.vibrate) { try { navigator.vibrate(win ? [30,50,30] : 200); } catch(_) {} }
+
+    setTimeout(function () {
+      itemEl.classList.remove('win','lose');
+      if (win) {
+        var profit = Math.round(classicBet / chance) - classicBet;
+        GAME_STATE.balance += profit;
+        GAME_STATE.totalEarned += profit;
+        addClassicHistory(true, profit);
+        showToast('✅ Успех! +' + fmt(profit));
+      } else {
+        GAME_STATE.inventory.splice(invIdx, 1);
+        GAME_STATE.balance -= classicBet;
+        GAME_STATE.totalSpent += classicBet;
+        addClassicHistory(false, classicBet);
+        showToast('💀 Предмет потерян');
+        currentItem = null;
+      }
+      updateAllBalances(); saveState();
+      renderClassic();
+      running = false;
+    }, 700);
+  }
+  upgradeBtn.addEventListener('click', doClassicUpgrade);
+  new LiquidGlass.Pill(upgradeBtn, {});
+
+  var wheelSvg = document.getElementById('wheelSvg');
+  var wheelArrow = document.getElementById('wheelArrow');
+  var wheelEmoji = document.getElementById('wheelEmoji');
+  var wheelLabel = document.getElementById('wheelLabel');
+  var wheelWinSeg = document.getElementById('wheelWinSeg');
+  var wheelLoseSeg = document.getElementById('wheelLoseSeg');
+  var wheelBetValue = document.getElementById('wheelBetValue');
+  var wheelWinAmount = document.getElementById('wheelWinAmount');
+  var wheelSpinBtn = document.getElementById('wheelSpinBtn');
+  var wheelHistEl = document.getElementById('wheelHistory');
+  var wheelBody = document.getElementById('wheelBody');
+  var wheelEmpty = document.getElementById('wheelEmpty');
+
+  var wheelState = { segments: [], spinning: false, currentAngle: 0, bet: 10, winChance: 0.5 };
+  var wheelSlider = null;
+
+  function initWheelSegments(chance) {
+    var total = 8;
+    var winCount = Math.round(total * chance);
+    if (winCount < 1) winCount = 1;
+    if (winCount > total - 1) winCount = total - 1;
+    var segs = [];
+    for (var i = 0; i < total; i++) segs.push({ win: i < winCount });
+    for (var j = segs.length - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var tmp = segs[j]; segs[j] = segs[k]; segs[k] = tmp;
+    }
+    wheelState.segments = segs;
+  }
+  function drawWheel() {
+    var cx = 100, cy = 100, r = 95;
+    var segs = wheelState.segments;
+    var n = segs.length;
+    var angleStep = (2 * Math.PI) / n;
+    var svgNS = 'http://www.w3.org/2000/svg';
+    wheelSvg.innerHTML = '';
+    for (var i = 0; i < n; i++) {
+      var startAngle = i * angleStep;
+      var endAngle = startAngle + angleStep;
+      var x1 = cx + r * Math.cos(startAngle);
+      var y1 = cy + r * Math.sin(startAngle);
+      var x2 = cx + r * Math.cos(endAngle);
+      var y2 = cy + r * Math.sin(endAngle);
+      var largeArc = angleStep > Math.PI ? 1 : 0;
+      var path = document.createElementNS(svgNS, 'path');
+      var d = 'M ' + cx + ' ' + cy + ' L ' + x1 + ' ' + y1 +
+              ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + x2 + ' ' + y2 + ' Z';
+      path.setAttribute('d', d);
+      path.setAttribute('fill', segs[i].win ? 'rgba(52,199,89,0.7)' : 'rgba(255,69,58,0.7)');
+      path.setAttribute('stroke', 'rgba(255,255,255,0.15)');
+      path.setAttribute('stroke-width', '1');
+      wheelSvg.appendChild(path);
+    }
+    var inner = document.createElementNS(svgNS, 'circle');
+    inner.setAttribute('cx', cx); inner.setAttribute('cy', cy);
+    inner.setAttribute('r', 78);
+    inner.setAttribute('fill', 'rgba(10,10,25,0.6)');
+    inner.setAttribute('stroke', 'rgba(255,255,255,0.1)');
+    wheelSvg.appendChild(inner);
+  }
+  function renderWheel() {
+    var hasItems = GAME_STATE.inventory.length > 0;
+    wheelBody.style.display = hasItems ? 'flex' : 'none';
+    wheelEmpty.style.display = hasItems ? 'none' : 'flex';
+    if (!hasItems) return;
+    var itemId = pickFirstItem();
+    var item = ITEMS_DB[itemId];
+    if (!item) return;
+    wheelEmoji.textContent = item.emoji;
+    wheelLabel.textContent = item.name;
+    var chance = getChance(wheelState.bet, item.price);
+    wheelState.winChance = chance;
+    if (wheelSlider) {
+      wheelSlider.MAX = Math.max(item.price, GAME_STATE.balance || 1);
+      wheelSlider.setValue(Math.min(wheelState.bet, wheelSlider.MAX));
+    } else {
+      wheelSlider = new LiquidGlass.Slider(document.getElementById('wheelBetSlider'), {
+        min: 1, max: Math.max(item.price, GAME_STATE.balance || 1), value: wheelState.bet,
+        wrap: document.getElementById('wheelBetSlider').closest('.slider-wrap'),
+        onChange: function (v) {
+          wheelState.bet = v;
+          wheelBetValue.textContent = fmt(v);
+          updateWheelUI();
+        }
+      });
+    }
+    wheelBetValue.textContent = fmt(wheelState.bet);
+    updateWheelUI();
+    initWheelSegments(chance);
+    drawWheel();
+  }
+  function updateWheelUI() {
+    var itemId = pickFirstItem();
+    var item = ITEMS_DB[itemId];
+    if (!item) return;
+    var chance = getChance(wheelState.bet, item.price);
+    wheelState.winChance = chance;
+    wheelWinSeg.style.width = (chance * 100) + '%';
+    wheelLoseSeg.style.width = ((1 - chance) * 100) + '%';
+    wheelWinSeg.textContent = Math.round(chance * 100) + '%';
+    wheelLoseSeg.textContent = Math.round((1 - chance) * 100) + '%';
+    wheelWinAmount.textContent = fmt(Math.round(wheelState.bet / chance));
+    initWheelSegments(chance);
+    drawWheel();
+  }
+  function addWheelHistory(win, amount) {
+    var chip = document.createElement('div');
+    chip.className = 'history-chip ' + (win ? 'win' : 'lose');
+    chip.textContent = (win ? '🎉 +' : '💀 -') + fmt(amount);
+    if (wheelHistEl.children.length === 1 && wheelHistEl.children[0].tagName === 'DIV' &&
+        wheelHistEl.children[0].style.fontSize === '10px') wheelHistEl.innerHTML = '';
+    wheelHistEl.appendChild(chip);
+    while (wheelHistEl.children.length > 12) wheelHistEl.removeChild(wheelHistEl.firstChild);
+  }
+  function spinWheel() {
+    if (wheelState.spinning) return;
+    var itemId = pickFirstItem();
+    var item = ITEMS_DB[itemId];
+    if (!item) { showToast('❌ Нет предмета'); return; }
+    var invIdx = GAME_STATE.inventory.indexOf(itemId);
+    if (invIdx === -1) { showToast('❌ Предмет не найден'); renderWheel(); return; }
+    if (GAME_STATE.balance < wheelState.bet) { showToast('❌ Недостаточно средств'); return; }
+
+    wheelState.spinning = true;
+    var segs = wheelState.segments;
+    var n = segs.length;
+    var angleStepDeg = 360 / n;
+    var chance = getChance(wheelState.bet, item.price);
+    var win = Math.random() < chance;
+
+    var candidates = [];
+    for (var i = 0; i < n; i++) if (segs[i].win === win) candidates.push(i);
+    var chosenIdx = candidates[Math.floor(Math.random() * candidates.length)];
+    var targetAngle = (chosenIdx + 0.5) * angleStepDeg;
+    var fullSpins = 5 + Math.floor(Math.random() * 3);
+    var totalRotation = fullSpins * 360 + targetAngle;
+    var baseAngle = wheelState.currentAngle;
+    var baseMod = baseAngle % 360;
+    var finalAngle = baseAngle - baseMod + totalRotation;
+    wheelState.currentAngle = finalAngle;
+
+    wheelArrow.style.transition = 'transform 4s cubic-bezier(0.15, 0.85, 0.25, 1)';
+    wheelArrow.style.transform = 'translate(-50%, -100%) rotate(' + finalAngle + 'deg)';
+
+    if (navigator.vibrate) { try { navigator.vibrate([10, 30, 10, 30, 10]); } catch(_) {} }
+
+    setTimeout(function () {
+      wheelState.spinning = false;
+      if (win) {
+        var profit = Math.round(wheelState.bet / chance) - wheelState.bet;
+        GAME_STATE.balance += profit;
+        GAME_STATE.totalEarned += profit;
+        addWheelHistory(true, profit);
+        showToast('🎉 Успех! +' + fmt(profit));
+        if (navigator.vibrate) { try { navigator.vibrate([30,50,30]); } catch(_) {} }
+      } else {
+        GAME_STATE.inventory.splice(invIdx, 1);
+        GAME_STATE.balance -= wheelState.bet;
+        GAME_STATE.totalSpent += wheelState.bet;
+        addWheelHistory(false, wheelState.bet);
+        showToast('💀 Предмет потерян');
+        if (navigator.vibrate) { try { navigator.vibrate(200); } catch(_) {} }
+      }
+      updateAllBalances(); saveState();
+      renderWheel();
+    }, 4100);
+  }
+  wheelSpinBtn.addEventListener('click', spinWheel);
+  new LiquidGlass.Pill(wheelSpinBtn, {});
+
+  var modeTabs = new LiquidGlass.Tabs(document.getElementById('upgradeModeTabs'), {
+    value: 0,
+    onChange: function (idx) {
+      document.getElementById('upgradeClassic').classList.toggle('active', idx === 0);
+      document.getElementById('upgradeWheel').classList.toggle('active', idx === 1);
+      if (idx === 0) renderClassic(); else renderWheel();
+    }
+  });
+
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () {
+      if (modeTabs) {
+        var ok = modeTabs.remeasure();
+        if (ok) modeTabs._applyKnobTransform();
+      }
+    });
+    ro.observe(document.getElementById('upgradeModeTabs'));
+  }
+
+  window.refreshUpgrade = function () {
+    if (modeTabs) {
+      modeTabs.remeasure();
+      modeTabs._applyKnobTransform();
+    }
+    var idx = modeTabs ? modeTabs.getValue() : 0;
+    if (idx === 0) renderClassic(); else renderWheel();
+  };
+
+  renderClassic();
+  renderWheel();
+
+  requestAnimationFrame(function () { if (window.refreshUpgrade) window.refreshUpgrade(); });
+  setTimeout(function () { if (window.refreshUpgrade) window.refreshUpgrade(); }, 0);
+  setTimeout(function () { if (window.refreshUpgrade) window.refreshUpgrade(); }, 100);
+  setTimeout(function () { if (window.refreshUpgrade) window.refreshUpgrade(); }, 400);
+})();
+
+/* ============================================================
+ * APP 3 — ПРОФИЛЬ
+ * ============================================================ */
+(function () {
+  var ALL_ITEMS_MAP = {
+    's1':  { emoji:'🔩', name:'Гайка',       rarity:'common',    price:15 },
+    's2':  { emoji:'🧵', name:'Нитка',       rarity:'common',    price:20 },
+    's3':  { emoji:'🍪', name:'Печенье',     rarity:'common',    price:25 },
+    's4':  { emoji:'🔋', name:'Батарейка',   rarity:'uncommon',  price:60 },
+    's5':  { emoji:'🎧', name:'Наушники',    rarity:'uncommon',  price:80 },
+    's6':  { emoji:'🕶️', name:'Очки',        rarity:'uncommon',  price:95 },
+    's7':  { emoji:'📱', name:'Смартфон',    rarity:'rare',      price:250 },
+    's8':  { emoji:'💎', name:'Алмаз',       rarity:'rare',      price:320 },
+    's9':  { emoji:'⌚', name:'Часы',        rarity:'rare',      price:400 },
+    's10': { emoji:'🏆', name:'Кубок',       rarity:'epic',      price:850 },
+    's11': { emoji:'💍', name:'Кольцо',      rarity:'epic',      price:1100 },
+    's12': { emoji:'🪄', name:'Жезл',        rarity:'epic',      price:1400 },
+    's13': { emoji:'👑', name:'Корона',      rarity:'legendary', price:3500 },
+    's14': { emoji:'🚀', name:'Ракета',      rarity:'legendary', price:5000 },
+    's15': { emoji:'🐉', name:'Дракон',      rarity:'mythic',    price:12000 }
+  };
+  var RARITY_COLORS = {
+    common:'#8e8e93', uncommon:'#30d158', rare:'#0a84ff',
+    epic:'#bf5af2', legendary:'#ff9f0a', mythic:'#ff375f'
+  };
+
+  window.refreshProfile = function () {
+    var inv = GAME_STATE.inventory;
+    var profileInvEl = document.getElementById('profileInventory');
+    var totalValue = 0;
+    var counts = {};
+    inv.forEach(function (id) {
+      counts[id] = (counts[id] || 0) + 1;
+      var it = ALL_ITEMS_MAP[id];
+      if (it) totalValue += it.price;
+    });
+
+    document.getElementById('profileBalance').textContent = GAME_STATE.balance;
+    document.getElementById('profileItems').textContent = inv.length;
+    document.getElementById('profileValue').textContent = totalValue.toLocaleString('ru-RU');
+
+    // XP и уровень: 1 предмет = 1 XP, уровень = каждые 100 XP
+    var xp = inv.length * 1;
+    var level = Math.max(1, Math.floor(xp / 100) + 1);
+    var xpInLevel = xp % 100;
+    var xpToNext = 100;
+
+    document.getElementById('profileLevel').textContent = 'LVL ' + level;
+    document.getElementById('profileXpText').textContent = xpInLevel + ' / ' + xpToNext + ' XP';
+    var fill = document.getElementById('profileXpFill');
+    if (fill) fill.style.width = Math.min(100, (xpInLevel / xpToNext) * 100) + '%';
+
+    // Достижения
+    var achievements = [
+      { emoji:'🎯', label:'Первый кейс', unlocked: inv.length >= 1 },
+      { emoji:'🔥', label:'10 предметов', unlocked: inv.length >= 10 },
+      { emoji:'💎', label:'Редкий дроп', unlocked: Object.keys(counts).some(function(id){
+          var it = ALL_ITEMS_MAP[id];
+          return it && (it.rarity === 'rare' || it.rarity === 'epic' || it.rarity === 'legendary' || it.rarity === 'mythic');
+        })
+      },
+      { emoji:'👑', label:'Легенда', unlocked: Object.keys(counts).some(function(id){
+          var it = ALL_ITEMS_MAP[id];
+          return it && (it.rarity === 'legendary' || it.rarity === 'mythic');
+        })
+      },
+      { emoji:'🏆', label:'Тысячник', unlocked: GAME_STATE.balance >= 1000 }
+    ];
+    var achEl = document.getElementById('profileAchievements');
+    if (achEl) {
+      achEl.innerHTML = '';
+      achievements.forEach(function (a) {
+        var chip = document.createElement('div');
+        chip.className = 'ach-chip' + (a.unlocked ? '' : ' locked');
+        chip.innerHTML = '<span class="ac-emoji">' + a.emoji + '</span><span>' + a.label + '</span>';
+        achEl.appendChild(chip);
+      });
+    }
+
+    var cntEl = document.getElementById('profileInvCount');
+    if (cntEl) cntEl.textContent = inv.length + ' предметов';
+
+    profileInvEl.innerHTML = '';
+    var ids = Object.keys(counts);
+    if (ids.length === 0) {
+      profileInvEl.innerHTML =
+        '<div class="empty-inventory">' +
+          '<div class="ei-emoji">📦</div>' +
+          '<div class="ei-title">Инвентарь пуст</div>' +
+          '<div class="ei-sub">Открой кейс, чтобы получить предметы</div>' +
+        '</div>';
+      return;
+    }
+    ids.sort(function (a, b) {
+      return (ALL_ITEMS_MAP[b] ? ALL_ITEMS_MAP[b].price : 0) -
+             (ALL_ITEMS_MAP[a] ? ALL_ITEMS_MAP[a].price : 0);
+    });
+    ids.forEach(function (id) {
+      var it = ALL_ITEMS_MAP[id];
+      if (!it) return;
+      var slot = document.createElement('div');
+      slot.className = 'profile-inv-slot';
+      slot.style.setProperty('--item-color', RARITY_COLORS[it.rarity] || '#fff');
+      slot.style.setProperty('--item-glow', RARITY_COLORS[it.rarity] ?
+        RARITY_COLORS[it.rarity] + '55' : 'transparent');
+      slot.title = it.name + ' · ' + it.rarity.toUpperCase() + ' · ' + it.price + ' ₽';
+      slot.innerHTML = it.emoji;
+      if (counts[id] > 1) {
+        var c = document.createElement('span');
+        c.className = 'pis-count';
+        c.textContent = '×' + counts[id];
+        slot.appendChild(c);
+      }
+      profileInvEl.appendChild(slot);
+    });
+  };
+
+  updateAllBalances();
+  window.refreshProfile();
+})();
+
+(function () {
+  updateAllBalances();
+  if (window.refreshProfile) window.refreshProfile();
+})();
+</script>
+</body>
+</html>
