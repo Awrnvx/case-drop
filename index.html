@@ -8,8 +8,6 @@
 .lg-pill, .lg-pill *, .lg-track, .lg-track *, .slider, .slider *, .tabs, .tabs * {
   margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
 }
-
-/* ---------- PILL ---------- */
 .lg-pill {
   position:relative; isolation:isolate;
   display:inline-flex; align-items:center; justify-content:center; gap:10px;
@@ -96,7 +94,6 @@
 .lg-pill .label { font-size:16px; font-weight:600; line-height:1; white-space:nowrap; }
 .lg-pill:focus-visible { outline:2px solid rgba(255,255,255,0.7); outline-offset:4px; }
 
-/* ---------- TOGGLE ---------- */
 .lg-track {
   position:relative; width:80px; height:34px; border-radius:17px;
   background:rgba(120,120,128,0.35);
@@ -224,7 +221,6 @@
   100%{transform:translate(-50%,-50%) scale(16);opacity:0;}
 }
 
-/* ---------- SLIDER ---------- */
 .slider-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
 .slider {
   position:relative; width:100%; height:40px;
@@ -393,7 +389,6 @@
 }
 .slider-wrap .value-readout b { font-weight:600; color:#fff; }
 
-/* ---------- TABS ---------- */
 .tabs {
   position:relative;
   height:60px;
@@ -544,7 +539,6 @@
 .tabs .tab .label { font-size:10px; font-weight:500; line-height:1; opacity:0.85; }
 .tabs .tab.active .label { opacity:1; }
 
-/* ============================================================ ОБЩЕЕ */
 body {
   background:
     radial-gradient(ellipse at 20% 20%, rgba(255,80,120,0.4) 0%, transparent 45%),
@@ -589,7 +583,6 @@ body {
   font-size:12px; color:rgba(255,255,255,0.6); letter-spacing:0.02em; text-align:center;
 }
 
-/* ============================================================ КЕЙСЫ */
 .case-balance {
   display:flex; align-items:center; gap:10px;
   padding:10px 18px; border-radius:999px;
@@ -723,11 +716,13 @@ body {
 }
 .result-modal .rm-close:active { transform:scale(0.95); }
 
-/* ============================================================ АПГРЕЙДЕР */
 .upgrade-mode-tabs {
-  width: 100%;
+  width: 260px;
+  max-width: 100%;
   height: 44px;
   border-radius: 999px;
+  align-self: center;
+  margin: 0 auto;
 }
 .upgrade-mode-tabs .knob {
   top: 5px !important;
@@ -742,18 +737,11 @@ body {
   font-weight: 600;
 }
 .upgrade-mode-tabs .tab .icon {
-  width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  line-height: 1;
+  width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
 }
-.upgrade-mode-tabs .tab .label {
-  font-size: 12px;
-  font-weight: 600;
-}
+.upgrade-mode-tabs .tab .label { font-size: 12px; font-weight: 600; }
 
 .upgrade-panel {
   width: 100%;
@@ -768,6 +756,12 @@ body {
 .upgrade-panel.active {
   display: flex;
   animation: appIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+#upgradeBtn, #wheelSpinBtn {
+  width: 100% !important;
+  max-width: 320px !important;
+  align-self: center !important;
 }
 
 .upgrade-empty {
@@ -945,7 +939,6 @@ body {
   box-shadow:0 0 0 1px rgba(255,69,58,0.4) inset;
 }
 
-/* ============================================================ ПРОФИЛЬ */
 .profile-card {
   position: relative;
   width: 100%;
@@ -1334,7 +1327,6 @@ body {
   color: rgba(255,255,255,0.4);
 }
 
-/* ============================================================ ТОСТ */
 .toast {
   position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px);
   padding:12px 22px; border-radius:999px;
@@ -1399,7 +1391,7 @@ body {
     <div class="roulette-pointer"></div>
   </div>
 
-  <button class="lg-pill" id="openCaseBtn" style="width:100%;" type="button" data-lg-pill>
+  <button class="lg-pill" id="openCaseBtn" style="width:100%;max-width:320px;" type="button" data-lg-pill>
     <span class="lens"></span><span class="inner-shadow"></span>
     <span class="ripple-layer"></span>
     <span class="content">
@@ -1521,7 +1513,7 @@ body {
 
 <script>
 /* ============================================================
- * LIQUID GLASS UI — библиотека
+ * LIQUID GLASS UI — библиотека (с фиксом слайдера)
  * ============================================================ */
 (function (global) {
   'use strict';
@@ -1828,6 +1820,7 @@ body {
     this._start();
   };
 
+  /* ============ SLIDER с фиксом ============ */
   function Slider(sliderEl, opts) {
     opts = opts || {};
     this.sliderEl = sliderEl;
@@ -1854,9 +1847,22 @@ body {
     this.PILL_SPEED_DEAD = 320; this.PILL_SPEED_MAX = 1800;
     this.PILL_DECAY = 0.955; this.PILL_STRETCH_X = 0.42;
     this.PILL_SQUASH_Y = 0.20; this.PILL_FOLLOW = 16;
+    this._measured = false;
     this._measure();
     requestAnimationFrame(function () { self._measure(); });
     global.addEventListener('resize', function () { self._measure(); });
+    /* FIX: ResizeObserver — ловит появление панели */
+    if (window.ResizeObserver) {
+      this._ro = new ResizeObserver(function () {
+        var prevW = self.SLIDER_W;
+        self._measure();
+        if (self.SLIDER_W !== prevW && self.SLIDER_W > 0) {
+          self._applyKnobTransform();
+          self._applyFill();
+        }
+      });
+      this._ro.observe(sliderEl);
+    }
     this._last = performance.now();
     this._tick = function (now) {
       var dt = Math.min((now - self._last) / 1000, 0.033); self._last = now;
@@ -1899,10 +1905,33 @@ body {
     self._applyKnobTransform(); self._applyFill(); self._updateReadout();
     self.state.rafId = requestAnimationFrame(self._tick);
   }
+  /* FIX: не ломает TRAVEL при нулевой ширине */
   Slider.prototype._measure = function () {
-    this.SLIDER_W = safeMeasure(this.sliderEl, 300);
-    this.KNOB_W = safeMeasure(this.knob, 49);
+    var w = safeMeasure(this.sliderEl, 0);
+    var k = safeMeasure(this.knob, 49);
+    this.KNOB_W = k;
+    if (w <= 0) {
+      this.SLIDER_W = 0;
+      this.TRAVEL = 1;
+      this._measured = false;
+      return false;
+    }
+    this.SLIDER_W = w;
     this.TRAVEL = Math.max(1, this.SLIDER_W - this.KNOB_W);
+    this._measured = true;
+    return true;
+  };
+  /* FIX: публичный метод пересчёта */
+  Slider.prototype.remeasure = function () {
+    var prevW = this.SLIDER_W;
+    var ok = this._measure();
+    if (ok && this.SLIDER_W !== prevW) {
+      this._applyKnobTransform();
+      this._applyFill();
+      this._updateReadout();
+      return true;
+    }
+    return false;
   };
   Slider.prototype._valueToFraction = function (v) { return Math.max(0, Math.min(1, (v - this.MIN) / (this.MAX - this.MIN))); };
   Slider.prototype._fractionToValue = function (f) { return Math.round(this.MIN + f * (this.MAX - this.MIN)); };
@@ -1916,8 +1945,9 @@ body {
   };
   Slider.prototype._applyFill = function () {
     if (!this.fill) return;
+    if (this.SLIDER_W <= 0) { this.fill.style.width = '0%'; return; }
     var knobCenter = this.KNOB_W / 2 + this.slider.fraction * this.TRAVEL;
-    var pct = this.SLIDER_W > 0 ? (knobCenter / this.SLIDER_W) * 100 : 0;
+    var pct = (knobCenter / this.SLIDER_W) * 100;
     if (this.slider.fraction <= 0.0005) pct = 0;
     if (this.slider.fraction >= 0.9995) pct = 100;
     this.fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
@@ -1981,6 +2011,10 @@ body {
     var activePointerId = null, startPointerX = 0, startFraction = 0;
     function onPointerDown(e) {
       if (activePointerId !== null) return;
+      /* FIX: измеряем перед первым drag'ом, если было скрыто */
+      if (!self._measured || self.SLIDER_W === 0) {
+        self._measure();
+      }
       activePointerId = e.pointerId;
       try { sliderEl.setPointerCapture(activePointerId); } catch(_) {}
       knobRectCache = knob.getBoundingClientRect();
@@ -2310,7 +2344,6 @@ body {
   global.LiquidGlass = LiquidGlass;
 })(window);
 
-/* ============================================================ УТИЛИТЫ */
 function showToast(text) {
   var t = document.getElementById('toast');
   t.textContent = text; t.classList.add('show');
@@ -2319,7 +2352,6 @@ function showToast(text) {
 }
 function fmt(n) { return n.toLocaleString('ru-RU') + ' ₽'; }
 
-/* ============================================================ СОСТОЯНИЕ */
 var GAME_STATE = { balance: 1000, inventory: [], totalSpent: 0, totalEarned: 0 };
 function saveState() { try { localStorage.setItem('lg_state', JSON.stringify(GAME_STATE)); } catch(_) {} }
 function loadState() {
@@ -2338,7 +2370,6 @@ function updateAllBalances() {
   if (pi) pi.textContent = GAME_STATE.inventory.length;
 }
 
-/* ============================================================ ПЕРЕКЛЮЧАТЕЛЬ ПРИЛОЖЕНИЙ */
 (function () {
   new LiquidGlass.Tabs(document.getElementById('appTabs'), {
     value: 0,
@@ -2351,18 +2382,16 @@ function updateAllBalances() {
         setTimeout(window.refreshProfile, 80);
       }
       if (idx === 1 && window.refreshUpgrade) {
+        /* FIX: добавляем ещё один вызов после завершения CSS-анимации appIn */
         requestAnimationFrame(window.refreshUpgrade);
-        setTimeout(window.refreshUpgrade, 0);
         setTimeout(window.refreshUpgrade, 80);
         setTimeout(window.refreshUpgrade, 250);
+        setTimeout(window.refreshUpgrade, 500);
       }
     }
   });
 })();
 
-/* ============================================================
- * APP 1 — КЕЙСЫ
- * ============================================================ */
 (function () {
   var RARITIES = {
     common:    { color:'#8e8e93', glow:'rgba(142,142,147,0.5)',  name:'COMMON' },
@@ -2548,9 +2577,6 @@ function updateAllBalances() {
   new LiquidGlass.Pill(openBtn, {});
 })();
 
-/* ============================================================
- * APP 2 — АПГРЕЙДЕР
- * ============================================================ */
 (function () {
   var ITEMS_DB = {
     's1':  { emoji:'🔩', name:'Гайка',       rarity:'COMMON',    color:'#8e8e93', glow:'rgba(142,142,147,0.4)', price:15 },
@@ -2578,8 +2604,8 @@ function updateAllBalances() {
       '<div class="ue-emoji">📦</div>' +
       '<div class="ue-text">Инвентарь пуст.<br>Открой кейс, чтобы получить предметы для апгрейда.</div>' +
     '</div>' +
-    '<div id="classicBody" style="display:flex;flex-direction:column;gap:14px;width:100%;">' +
-      '<div class="upgrade-item" id="upgradeItem">' +
+    '<div id="classicBody" style="display:flex;flex-direction:column;gap:14px;width:100%;align-items:center;">' +
+      '<div class="upgrade-item" id="upgradeItem" style="max-width:320px;width:100%;">' +
         '<div class="ui-emoji" id="uiEmoji">💎</div>' +
         '<div class="ui-info">' +
           '<span class="ui-name" id="uiName">Алмаз</span>' +
@@ -2587,7 +2613,7 @@ function updateAllBalances() {
           '<span class="ui-price" id="uiPrice">250 ₽</span>' +
         '</div>' +
       '</div>' +
-      '<div class="upgrade-bet-wrap">' +
+      '<div class="upgrade-bet-wrap" style="max-width:320px;width:100%;">' +
         '<div class="upgrade-bet-head">' +
           '<span class="ub-label">Ставка</span>' +
           '<span class="ub-value" id="classicBetValue">10 ₽</span>' +
@@ -2606,7 +2632,7 @@ function updateAllBalances() {
         '</div>' +
         '<div class="upgrade-bet-hint">Больше ставка — выше шанс</div>' +
       '</div>' +
-      '<div class="chance-bar-wrap">' +
+      '<div class="chance-bar-wrap" style="max-width:320px;width:100%;">' +
         '<div class="chance-bar">' +
           '<div class="chance-seg win-seg" id="winSeg" style="width:50%;">50%</div>' +
           '<div class="chance-seg lose-seg" id="loseSeg" style="width:50%;">50%</div>' +
@@ -2616,7 +2642,7 @@ function updateAllBalances() {
           '<span class="um-label">Множитель: <span class="um-value" id="multiplier">×2.0</span></span>' +
         '</div>' +
       '</div>' +
-      '<button class="lg-pill" id="upgradeBtn" style="width:100%;" type="button" data-lg-pill>' +
+      '<button class="lg-pill" id="upgradeBtn" type="button" data-lg-pill>' +
         '<span class="lens"></span><span class="inner-shadow"></span>' +
         '<span class="ripple-layer"></span>' +
         '<span class="content">' +
@@ -2626,7 +2652,7 @@ function updateAllBalances() {
           '<span class="label" id="upgLabel">Апгрейд</span>' +
         '</span>' +
       '</button>' +
-      '<div class="upgrade-history" id="upgradeHistory">' +
+      '<div class="upgrade-history" id="upgradeHistory" style="max-width:320px;width:100%;">' +
         '<div style="font-size:10px;color:rgba(255,255,255,0.35);padding:6px 4px;">История появится здесь</div>' +
       '</div>' +
     '</div>';
@@ -2645,7 +2671,7 @@ function updateAllBalances() {
           '<span class="ruc-label" id="wheelLabel">START</span>' +
         '</div>' +
       '</div>' +
-      '<div class="upgrade-bet-wrap">' +
+      '<div class="upgrade-bet-wrap" style="max-width:320px;width:100%;">' +
         '<div class="upgrade-bet-head">' +
           '<span class="ub-label">Ставка</span>' +
           '<span class="ub-value" id="wheelBetValue">10 ₽</span>' +
@@ -2664,7 +2690,7 @@ function updateAllBalances() {
         '</div>' +
         '<div class="upgrade-bet-hint">Больше ставка — выше шанс</div>' +
       '</div>' +
-      '<div class="chance-bar-wrap">' +
+      '<div class="chance-bar-wrap" style="max-width:320px;width:100%;">' +
         '<div class="chance-bar">' +
           '<div class="chance-seg win-seg" id="wheelWinSeg" style="width:50%;">50%</div>' +
           '<div class="chance-seg lose-seg" id="wheelLoseSeg" style="width:50%;">50%</div>' +
@@ -2673,7 +2699,7 @@ function updateAllBalances() {
           '<span class="um-label">Выигрыш: <span class="um-value" id="wheelWinAmount">500 ₽</span></span>' +
         '</div>' +
       '</div>' +
-      '<button class="lg-pill" id="wheelSpinBtn" style="width:100%;" type="button" data-lg-pill>' +
+      '<button class="lg-pill" id="wheelSpinBtn" type="button" data-lg-pill>' +
         '<span class="lens"></span><span class="inner-shadow"></span>' +
         '<span class="ripple-layer"></span>' +
         '<span class="content">' +
@@ -2683,7 +2709,7 @@ function updateAllBalances() {
           '<span class="label">Крутить</span>' +
         '</span>' +
       '</button>' +
-      '<div class="upgrade-history" id="wheelHistory">' +
+      '<div class="upgrade-history" id="wheelHistory" style="max-width:320px;width:100%;">' +
         '<div style="font-size:10px;color:rgba(255,255,255,0.35);padding:6px 4px;">История появится здесь</div>' +
       '</div>' +
     '</div>';
@@ -3005,7 +3031,14 @@ function updateAllBalances() {
     onChange: function (idx) {
       document.getElementById('upgradeClassic').classList.toggle('active', idx === 0);
       document.getElementById('upgradeWheel').classList.toggle('active', idx === 1);
-      if (idx === 0) renderClassic(); else renderWheel();
+      /* FIX: пересчёт слайдера после переключения панели */
+      if (idx === 0) {
+        renderClassic();
+        if (classicSlider) requestAnimationFrame(function () { classicSlider.remeasure(); });
+      } else {
+        renderWheel();
+        if (wheelSlider) requestAnimationFrame(function () { wheelSlider.remeasure(); });
+      }
     }
   });
 
@@ -3025,7 +3058,14 @@ function updateAllBalances() {
       modeTabs._applyKnobTransform();
     }
     var idx = modeTabs ? modeTabs.getValue() : 0;
-    if (idx === 0) renderClassic(); else renderWheel();
+    /* FIX: пересчёт слайдера после показа панели */
+    if (idx === 0) {
+      renderClassic();
+      if (classicSlider) requestAnimationFrame(function () { classicSlider.remeasure(); });
+    } else {
+      renderWheel();
+      if (wheelSlider) requestAnimationFrame(function () { wheelSlider.remeasure(); });
+    }
   };
 
   renderClassic();
@@ -3037,9 +3077,6 @@ function updateAllBalances() {
   setTimeout(function () { if (window.refreshUpgrade) window.refreshUpgrade(); }, 400);
 })();
 
-/* ============================================================
- * APP 3 — ПРОФИЛЬ
- * ============================================================ */
 (function () {
   var ALL_ITEMS_MAP = {
     's1':  { emoji:'🔩', name:'Гайка',       rarity:'common',    price:15 },
@@ -3078,7 +3115,6 @@ function updateAllBalances() {
     document.getElementById('profileItems').textContent = inv.length;
     document.getElementById('profileValue').textContent = totalValue.toLocaleString('ru-RU');
 
-    // XP и уровень: 1 предмет = 1 XP, уровень = каждые 100 XP
     var xp = inv.length * 1;
     var level = Math.max(1, Math.floor(xp / 100) + 1);
     var xpInLevel = xp % 100;
@@ -3089,7 +3125,6 @@ function updateAllBalances() {
     var fill = document.getElementById('profileXpFill');
     if (fill) fill.style.width = Math.min(100, (xpInLevel / xpToNext) * 100) + '%';
 
-    // Достижения
     var achievements = [
       { emoji:'🎯', label:'Первый кейс', unlocked: inv.length >= 1 },
       { emoji:'🔥', label:'10 предметов', unlocked: inv.length >= 10 },
